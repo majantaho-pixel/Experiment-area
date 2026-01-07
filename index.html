@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Merge 2048 – NEXT FX</title>
+<title>Merge 2048 – LEVEL SYSTEM</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 body{
   margin:0;
-  background:radial-gradient(circle at top,#111,#040404);
+  background:radial-gradient(circle at top,#111,#050505);
   font-family:system-ui,Arial;
   color:#fff;
   display:flex;
@@ -16,275 +16,212 @@ body{
   align-items:center;
   height:100vh;
 }
-.game{
-  width:360px;
-  transition:transform .15s;
-}
-.shake{
-  animation:shake .15s;
-}
-@keyframes shake{
-  0%{transform:translate(0)}
-  25%{transform:translate(-4px,2px)}
-  50%{transform:translate(4px,-2px)}
-  75%{transform:translate(-3px,1px)}
-  100%{transform:translate(0)}
-}
-
+.game{width:360px}
 .top{
   display:flex;
   justify-content:space-between;
-  margin-bottom:10px;
+  margin-bottom:8px;
 }
 .box{
   background:#1a1a1a;
-  padding:8px 14px;
-  border-radius:12px;
+  padding:6px 10px;
+  border-radius:10px;
+  font-size:13px;
   font-weight:600;
 }
 .board{
   display:grid;
   grid-template-columns:repeat(5,1fr);
   gap:6px;
-  background:#0b0b0b;
+  background:#0c0c0c;
   padding:6px;
-  border-radius:16px;
+  border-radius:14px;
 }
 .col{
   background:#141414;
-  border-radius:14px;
-  min-height:300px;
+  border-radius:12px;
+  min-height:280px;
   display:flex;
   flex-direction:column-reverse;
   padding:5px;
-  cursor:pointer;
 }
-
-/* TILE */
 .tile{
-  position:relative;
-  height:46px;
+  height:44px;
   margin:4px 0;
-  border-radius:14px;
+  border-radius:12px;
   display:flex;
   align-items:center;
   justify-content:center;
   font-weight:800;
-  font-size:16px;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.25),
-             inset 0 -2px 6px rgba(0,0,0,.35),
-             0 6px 14px rgba(0,0,0,.45);
+  animation:drop .25s;
 }
-.new{animation:drop .28s cubic-bezier(.18,.89,.32,1.28)}
 @keyframes drop{
-  from{transform:translateY(-24px) scale(.9);opacity:.3}
+  from{transform:translateY(-20px);opacity:.3}
   to{transform:none;opacity:1}
 }
-.merge{animation:merge .25s ease-out}
-@keyframes merge{
-  0%{transform:scale(1)}
-  50%{transform:scale(1.25)}
-  100%{transform:scale(1)}
-}
+.n16{background:#2ecc71}
+.n32{background:#27ae60}
+.n64{background:#3498db}
+.n128{background:#9b59b6}
+.n256{background:#e84393}
+.n512{background:#e17055}
+.n1024{background:#fdcb6e;color:#000}
+.n2048{background:#00cec9;color:#000}
+.n4096{background:#6c5ce7}
+.n8192{background:#f9ca24;color:#000}
+.n16384{background:#ffeaa7;color:#000}
+.controls{text-align:center;margin-top:10px}
+.next{background:#1b1b1b;padding:8px;border-radius:10px;margin-bottom:6px}
 
-/* PARTICLES */
-.particle{
-  position:absolute;
-  width:6px;height:6px;
-  border-radius:50%;
-  background:gold;
-  pointer-events:none;
-  animation:particle .6s ease-out forwards;
-}
-@keyframes particle{
-  to{
-    transform:translate(var(--x),var(--y)) scale(0);
-    opacity:0;
-  }
-}
-
-/* COMBO TEXT */
-.combo{
+.celebration{
   position:fixed;
-  top:30%;
-  font-size:32px;
+  top:35%;
+  font-size:30px;
   font-weight:900;
-  text-shadow:0 6px 20px #000;
-  animation:combo .8s ease-out forwards;
-  pointer-events:none;
+  animation:celebrate 1s ease forwards;
 }
-@keyframes combo{
-  from{opacity:0;transform:scale(.6)}
-  30%{opacity:1;transform:scale(1.2)}
-  to{opacity:0;transform:scale(1.4)}
+@keyframes celebrate{
+  from{opacity:0;transform:scale(.5)}
+  40%{opacity:1;transform:scale(1.2)}
+  to{opacity:0;transform:scale(1.5)}
 }
+.muslim{color:gold;text-shadow:0 0 15px gold}
 
-/* COLORS */
-.n16{background:linear-gradient(135deg,#55efc4,#00b894)}
-.n32{background:linear-gradient(135deg,#00cec9,#0984e3)}
-.n64{background:linear-gradient(135deg,#74b9ff,#6c5ce7)}
-.n128{background:linear-gradient(135deg,#a29bfe,#6c5ce7)}
-.n256{background:linear-gradient(135deg,#ff7675,#e84393)}
-.n512{background:linear-gradient(135deg,#fab1a0,#e17055)}
-.n1024{background:linear-gradient(135deg,#ffeaa7,#fdcb6e);color:#000}
-.n2048{background:linear-gradient(135deg,#81ecec,#00cec9);color:#000}
-.n4096{background:linear-gradient(135deg,#74b9ff,#0984e3)}
-.n8192{
-  background:linear-gradient(135deg,#f9ca24,#fff3b0);
-  color:#000;
-  box-shadow:0 0 18px rgba(249,202,36,.9);
+.trophy{
+  position:fixed;
+  top:10%;
+  font-size:36px;
+  animation:trophy 1.2s ease forwards;
 }
-
-.controls{margin-top:12px;text-align:center}
-.next{
-  background:#1b1b1b;
-  padding:10px;
-  border-radius:14px;
-  margin-bottom:8px;
-  font-size:18px;
-}
-button{
-  width:100%;
-  padding:11px;
-  border:none;
-  border-radius:14px;
-  background:linear-gradient(135deg,#00b894,#019875);
-  color:#fff;
-  font-size:16px;
+@keyframes trophy{
+  from{opacity:0;transform:translateY(-20px)}
+  to{opacity:1;transform:none}
 }
 </style>
 </head>
 
 <body>
 
-<div class="game" id="game">
+<div class="game">
   <div class="top">
+    <div class="box">Level: <span id="level">1</span></div>
+    <div class="box">Target: <span id="target">128</span></div>
     <div class="box">Score: <span id="score">0</span></div>
-    <div class="box">NEXT FX</div>
   </div>
 
   <div class="board" id="board"></div>
 
   <div class="controls">
     <div class="next">Next: <span id="next">128</span></div>
-    <button onclick="resetGame()">Restart</button>
   </div>
 </div>
 
-<audio id="mergeSound" src="https://assets.mixkit.co/sfx/preview/mixkit-magic-notification-2342.mp3"></audio>
-
 <script>
 const COLS=5, MAX_HEIGHT=6;
-let board=[], score=0, nextTile, comboCount=0;
+let board=[], score=0;
+let level=1, nextTile=128;
+
+const levelTargets=[...Array(50)].map((_,i)=>128*Math.pow(2,i));
+
+const celebrations=[
+"Awesome!","Incredible!","Bravo!","Fantastic!","Outstanding!",
+"Magnificent!","Unstoppable!","Legend Rising!","Power Unlocked!",
+"Victory!","Champion!","Elite!","Masterclass!","Glorious!","Divine Move!"
+];
+
+const muslimTexts=[
+"✨ Alhamdulillah ✨",
+"✨ SubhanAllah ✨",
+"✨ MashaAllah ✨",
+"✨ Allahu Akbar ✨"
+];
+
+const trophies=["🥉 Bronze","🥈 Silver","🥇 Gold","💎 Epic","👑 Legendary"];
 
 const boardDiv=document.getElementById("board");
 const scoreSpan=document.getElementById("score");
 const nextSpan=document.getElementById("next");
-const gameDiv=document.getElementById("game");
-const mergeSound=document.getElementById("mergeSound");
+const levelSpan=document.getElementById("level");
+const targetSpan=document.getElementById("target");
 
-function randomTile(){
-  return [16,32,64,128][Math.floor(Math.random()*4)];
+function save(){
+  localStorage.setItem("mergeSave",JSON.stringify({board,score,level,nextTile}));
 }
-
-function init(){
-  board=Array.from({length:COLS},()=>[]);
-  score=0;
-  comboCount=0;
-  nextTile=randomTile();
-  draw();
+function load(){
+  const s=localStorage.getItem("mergeSave");
+  if(s){
+    const d=JSON.parse(s);
+    board=d.board; score=d.score; level=d.level; nextTile=d.nextTile;
+  }else{
+    board=Array.from({length:COLS},()=>[]);
+  }
 }
-
-function draw(newPos=null, mergedPos=null, mergedValue=0){
+function draw(){
   boardDiv.innerHTML="";
-  scoreSpan.textContent=score;
-  nextSpan.textContent=nextTile;
-
-  board.forEach((col,ci)=>{
+  board.forEach((col,i)=>{
     const c=document.createElement("div");
     c.className="col";
-    c.onclick=()=>drop(ci);
-
-    col.forEach((v,ri)=>{
+    c.onclick=()=>drop(i);
+    col.forEach(v=>{
       const t=document.createElement("div");
       t.className="tile n"+v;
-      if(newPos && newPos.c===ci && newPos.r===ri) t.classList.add("new");
-      if(mergedPos && mergedPos.c===ci && mergedPos.r===ri){
-        t.classList.add("merge");
-        explode(t, v);
-        comboText(v);
-        if(v>=1024) screenShake();
-      }
-      t.textContent=v>=8192?"👑 "+v:v;
+      t.textContent=v;
       c.appendChild(t);
     });
     boardDiv.appendChild(c);
   });
+  scoreSpan.textContent=score;
+  nextSpan.textContent=nextTile;
+  levelSpan.textContent=level;
+  targetSpan.textContent=levelTargets[level-1];
 }
 
-function explode(tile,value){
-  mergeSound.currentTime=0; mergeSound.play();
-  const count=value>=1024?14:value>=512?10:6;
-  for(let i=0;i<count;i++){
-    const p=document.createElement("div");
-    p.className="particle";
-    p.style.setProperty("--x",(Math.random()*60-30)+"px");
-    p.style.setProperty("--y",(Math.random()*60-30)+"px");
-    tile.appendChild(p);
-    setTimeout(()=>p.remove(),600);
-  }
-}
-
-function comboText(value){
-  comboCount++;
-  let text="Nice!";
-  if(comboCount>=2) text="Great!";
-  if(comboCount>=3) text="Awesome!";
-  if(comboCount>=4) text="Legendary!";
+function celebrate(){
   const d=document.createElement("div");
-  d.className="combo";
-  d.textContent=text;
+  const isMuslim=level>=30;
+  d.className="celebration"+(isMuslim?" muslim":"");
+  d.textContent=isMuslim
+    ? muslimTexts[Math.floor(Math.random()*muslimTexts.length)]
+    : celebrations[Math.floor(Math.random()*celebrations.length)];
   document.body.appendChild(d);
-  setTimeout(()=>d.remove(),800);
+  setTimeout(()=>d.remove(),1000);
 }
 
-function screenShake(){
-  gameDiv.classList.add("shake");
-  setTimeout(()=>gameDiv.classList.remove("shake"),150);
+function trophy(){
+  if(level%10===0){
+    const t=document.createElement("div");
+    t.className="trophy";
+    t.textContent=trophies[Math.floor(level/10)-1];
+    document.body.appendChild(t);
+    setTimeout(()=>t.remove(),2000);
+  }
 }
 
 function drop(c){
-  if(board[c].length>=MAX_HEIGHT) return;
+  if(board[c].length>=MAX_HEIGHT)return;
   board[c].push(nextTile);
 
-  let newPos={c:c,r:board[c].length-1};
-  let mergedPos=null, mergedValue=0;
-
   while(board[c].length>=2){
-    let a=board[c].at(-1), b=board[c].at(-2);
+    let a=board[c].at(-1),b=board[c].at(-2);
     if(a===b){
-      board[c].pop(); board[c].pop();
+      board[c].pop();board[c].pop();
       let nv=a*2;
       board[c].push(nv);
       score+=nv;
-      mergedPos={c:c,r:board[c].length-1};
-      mergedValue=nv;
-    } else break;
+      if(nv>=levelTargets[level-1]){
+        level++;
+        celebrate();
+        trophy();
+      }
+    }else break;
   }
-
-  nextTile=randomTile();
-  draw(newPos, mergedPos, mergedValue);
-  checkGameOver();
+  nextTile=[16,32,64,128][Math.floor(Math.random()*4)];
+  save();
+  draw();
 }
 
-function checkGameOver(){
-  if(board.every(c=>c.length>=MAX_HEIGHT)){
-    alert("Game Over\nScore: "+score);
-  }
-}
-
-function resetGame(){init()}
-init();
+load();
+draw();
 </script>
 
 </body>
