@@ -2,17 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Merge 2048 Columns – PRO+</title>
+<title>Merge 2048 – Smart FX</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-:root{
-  --radius:14px;
-}
 body{
   margin:0;
   background:radial-gradient(circle at top,#111,#050505);
-  font-family:system-ui,Segoe UI,Arial;
+  font-family:system-ui,Arial;
   color:#fff;
   display:flex;
   justify-content:center;
@@ -26,33 +23,32 @@ body{
   margin-bottom:10px;
 }
 .box{
-  background:linear-gradient(145deg,#1e1e1e,#141414);
+  background:#1a1a1a;
   padding:8px 14px;
   border-radius:12px;
   font-weight:600;
-  box-shadow:inset 0 0 0 1px #2a2a2a;
 }
 .board{
   display:grid;
   grid-template-columns:repeat(5,1fr);
   gap:6px;
-  background:#0d0d0d;
+  background:#0c0c0c;
   padding:6px;
-  border-radius:18px;
+  border-radius:16px;
 }
 .col{
-  background:linear-gradient(#161616,#101010);
-  border-radius:16px;
+  background:#151515;
+  border-radius:14px;
   min-height:300px;
   display:flex;
   flex-direction:column-reverse;
   padding:5px;
   cursor:pointer;
-  box-shadow:inset 0 0 0 1px #1f1f1f;
 }
 
 /* ===== TILE ===== */
 .tile{
+  position:relative;
   height:46px;
   margin:4px 0;
   border-radius:14px;
@@ -61,27 +57,46 @@ body{
   justify-content:center;
   font-weight:800;
   font-size:16px;
-  letter-spacing:.4px;
-  animation:drop .28s cubic-bezier(.18,.89,.32,1.28);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.25),
     inset 0 -2px 6px rgba(0,0,0,.35),
     0 6px 14px rgba(0,0,0,.45);
 }
+
+/* NEW TILE DROP (only new one) */
+.new{
+  animation:drop .28s cubic-bezier(.18,.89,.32,1.28);
+}
 @keyframes drop{
-  from{transform:translateY(-22px) scale(.92);opacity:.2}
+  from{transform:translateY(-22px) scale(.9);opacity:.3}
   to{transform:none;opacity:1}
 }
+
+/* MERGE PULSE */
 .merge{
   animation:merge .25s ease-out;
 }
 @keyframes merge{
   0%{transform:scale(1)}
-  50%{transform:scale(1.18)}
+  50%{transform:scale(1.2)}
   100%{transform:scale(1)}
 }
 
-/* ===== COLORS ===== */
+/* SPARKS */
+.spark{
+  position:absolute;
+  width:6px;
+  height:6px;
+  background:gold;
+  border-radius:50%;
+  animation:spark .45s ease-out forwards;
+}
+@keyframes spark{
+  from{transform:scale(1);opacity:1}
+  to{transform:translate(var(--x),var(--y)) scale(0);opacity:0}
+}
+
+/* COLORS */
 .n16{background:linear-gradient(135deg,#55efc4,#00b894)}
 .n32{background:linear-gradient(135deg,#00cec9,#0984e3)}
 .n64{background:linear-gradient(135deg,#74b9ff,#6c5ce7)}
@@ -91,22 +106,16 @@ body{
 .n1024{background:linear-gradient(135deg,#ffeaa7,#fdcb6e);color:#000}
 .n2048{background:linear-gradient(135deg,#81ecec,#00cec9);color:#000}
 .n4096{background:linear-gradient(135deg,#74b9ff,#0984e3)}
-.n8192,.crown{
+.n8192{
   background:linear-gradient(135deg,#f9ca24,#fff3b0);
   color:#000;
-  text-shadow:0 1px 0 #fff;
-  box-shadow:
-    0 0 18px rgba(249,202,36,.9),
-    inset 0 1px 0 #fff;
+  box-shadow:0 0 18px rgba(249,202,36,.9);
 }
 
-/* ===== CONTROLS ===== */
-.controls{
-  margin-top:12px;
-  text-align:center;
-}
+/* CONTROLS */
+.controls{margin-top:12px;text-align:center}
 .next{
-  background:linear-gradient(#1e1e1e,#151515);
+  background:#1b1b1b;
   padding:10px;
   border-radius:14px;
   margin-bottom:8px;
@@ -120,9 +129,7 @@ button{
   background:linear-gradient(135deg,#00b894,#019875);
   color:#fff;
   font-size:16px;
-  font-weight:600;
 }
-button:active{transform:scale(.98)}
 </style>
 </head>
 
@@ -131,7 +138,7 @@ button:active{transform:scale(.98)}
 <div class="game">
   <div class="top">
     <div class="box">Score: <span id="score">0</span></div>
-    <div class="box">PRO+</div>
+    <div class="box">SMART FX</div>
   </div>
 
   <div class="board" id="board"></div>
@@ -142,8 +149,9 @@ button:active{transform:scale(.98)}
   </div>
 </div>
 
+<!-- SOUNDS -->
 <audio id="dropSound" src="https://assets.mixkit.co/sfx/preview/mixkit-soft-click-1123.mp3"></audio>
-<audio id="mergeSound" src="https://assets.mixkit.co/sfx/preview/mixkit-game-success-alert-2039.mp3"></audio>
+<audio id="mergeSound" src="https://assets.mixkit.co/sfx/preview/mixkit-magical-coin-win-1936.mp3"></audio>
 
 <script>
 const COLS=5, MAX_HEIGHT=6;
@@ -166,19 +174,28 @@ function init(){
   draw();
 }
 
-function draw(){
+function draw(newPos=null, mergedPos=null){
   boardDiv.innerHTML="";
   scoreSpan.textContent=score;
   nextSpan.textContent=nextTile;
 
-  board.forEach((col,i)=>{
+  board.forEach((col,ci)=>{
     const c=document.createElement("div");
     c.className="col";
-    c.onclick=()=>drop(i);
+    c.onclick=()=>drop(ci);
 
-    col.forEach(v=>{
+    col.forEach((v,ri)=>{
       const t=document.createElement("div");
-      t.className="tile n"+v+(v>=8192?" crown":"");
+      t.className="tile n"+v;
+
+      if(newPos && newPos.c===ci && newPos.r===ri)
+        t.classList.add("new");
+
+      if(mergedPos && mergedPos.c===ci && mergedPos.r===ri){
+        t.classList.add("merge");
+        createSparks(t);
+      }
+
       t.textContent=v>=8192?"👑 "+v:v;
       c.appendChild(t);
     });
@@ -186,26 +203,40 @@ function draw(){
   });
 }
 
-function drop(i){
-  if(board[i].length>=MAX_HEIGHT) return;
+function createSparks(tile){
+  for(let i=0;i<6;i++){
+    const s=document.createElement("div");
+    s.className="spark";
+    s.style.setProperty("--x",(Math.random()*40-20)+"px");
+    s.style.setProperty("--y",(Math.random()*40-20)+"px");
+    tile.appendChild(s);
+    setTimeout(()=>s.remove(),450);
+  }
+}
+
+function drop(c){
+  if(board[c].length>=MAX_HEIGHT) return;
 
   dropSound.currentTime=0; dropSound.play();
-  board[i].push(nextTile);
+  board[c].push(nextTile);
 
-  let merged=true;
-  while(merged && board[i].length>=2){
-    let a=board[i].at(-1), b=board[i].at(-2);
+  let newPos={c:c,r:board[c].length-1};
+  let mergedPos=null;
+
+  while(board[c].length>=2){
+    let a=board[c].at(-1), b=board[c].at(-2);
     if(a===b){
-      board[i].pop(); board[i].pop();
+      board[c].pop(); board[c].pop();
       let nv=a*2;
-      board[i].push(nv);
+      board[c].push(nv);
       score+=nv;
+      mergedPos={c:c,r:board[c].length-1};
       mergeSound.currentTime=0; mergeSound.play();
-    } else merged=false;
+    } else break;
   }
 
   nextTile=randomTile();
-  draw();
+  draw(newPos, mergedPos);
   checkGameOver();
 }
 
