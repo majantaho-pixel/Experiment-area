@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Merge 2048 – Smart FX</title>
+<title>Merge 2048 – NEXT FX</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 body{
   margin:0;
-  background:radial-gradient(circle at top,#111,#050505);
+  background:radial-gradient(circle at top,#111,#040404);
   font-family:system-ui,Arial;
   color:#fff;
   display:flex;
@@ -16,7 +16,21 @@ body{
   align-items:center;
   height:100vh;
 }
-.game{width:360px}
+.game{
+  width:360px;
+  transition:transform .15s;
+}
+.shake{
+  animation:shake .15s;
+}
+@keyframes shake{
+  0%{transform:translate(0)}
+  25%{transform:translate(-4px,2px)}
+  50%{transform:translate(4px,-2px)}
+  75%{transform:translate(-3px,1px)}
+  100%{transform:translate(0)}
+}
+
 .top{
   display:flex;
   justify-content:space-between;
@@ -32,12 +46,12 @@ body{
   display:grid;
   grid-template-columns:repeat(5,1fr);
   gap:6px;
-  background:#0c0c0c;
+  background:#0b0b0b;
   padding:6px;
   border-radius:16px;
 }
 .col{
-  background:#151515;
+  background:#141414;
   border-radius:14px;
   min-height:300px;
   display:flex;
@@ -46,7 +60,7 @@ body{
   cursor:pointer;
 }
 
-/* ===== TILE ===== */
+/* TILE */
 .tile{
   position:relative;
   height:46px;
@@ -57,43 +71,52 @@ body{
   justify-content:center;
   font-weight:800;
   font-size:16px;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.25),
-    inset 0 -2px 6px rgba(0,0,0,.35),
-    0 6px 14px rgba(0,0,0,.45);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.25),
+             inset 0 -2px 6px rgba(0,0,0,.35),
+             0 6px 14px rgba(0,0,0,.45);
 }
-
-/* NEW TILE DROP (only new one) */
-.new{
-  animation:drop .28s cubic-bezier(.18,.89,.32,1.28);
-}
+.new{animation:drop .28s cubic-bezier(.18,.89,.32,1.28)}
 @keyframes drop{
-  from{transform:translateY(-22px) scale(.9);opacity:.3}
+  from{transform:translateY(-24px) scale(.9);opacity:.3}
   to{transform:none;opacity:1}
 }
-
-/* MERGE PULSE */
-.merge{
-  animation:merge .25s ease-out;
-}
+.merge{animation:merge .25s ease-out}
 @keyframes merge{
   0%{transform:scale(1)}
-  50%{transform:scale(1.2)}
+  50%{transform:scale(1.25)}
   100%{transform:scale(1)}
 }
 
-/* SPARKS */
-.spark{
+/* PARTICLES */
+.particle{
   position:absolute;
-  width:6px;
-  height:6px;
-  background:gold;
+  width:6px;height:6px;
   border-radius:50%;
-  animation:spark .45s ease-out forwards;
+  background:gold;
+  pointer-events:none;
+  animation:particle .6s ease-out forwards;
 }
-@keyframes spark{
-  from{transform:scale(1);opacity:1}
-  to{transform:translate(var(--x),var(--y)) scale(0);opacity:0}
+@keyframes particle{
+  to{
+    transform:translate(var(--x),var(--y)) scale(0);
+    opacity:0;
+  }
+}
+
+/* COMBO TEXT */
+.combo{
+  position:fixed;
+  top:30%;
+  font-size:32px;
+  font-weight:900;
+  text-shadow:0 6px 20px #000;
+  animation:combo .8s ease-out forwards;
+  pointer-events:none;
+}
+@keyframes combo{
+  from{opacity:0;transform:scale(.6)}
+  30%{opacity:1;transform:scale(1.2)}
+  to{opacity:0;transform:scale(1.4)}
 }
 
 /* COLORS */
@@ -112,7 +135,6 @@ body{
   box-shadow:0 0 18px rgba(249,202,36,.9);
 }
 
-/* CONTROLS */
 .controls{margin-top:12px;text-align:center}
 .next{
   background:#1b1b1b;
@@ -135,10 +157,10 @@ button{
 
 <body>
 
-<div class="game">
+<div class="game" id="game">
   <div class="top">
     <div class="box">Score: <span id="score">0</span></div>
-    <div class="box">SMART FX</div>
+    <div class="box">NEXT FX</div>
   </div>
 
   <div class="board" id="board"></div>
@@ -149,18 +171,16 @@ button{
   </div>
 </div>
 
-<!-- SOUNDS -->
-<audio id="dropSound" src="https://assets.mixkit.co/sfx/preview/mixkit-soft-click-1123.mp3"></audio>
-<audio id="mergeSound" src="https://assets.mixkit.co/sfx/preview/mixkit-magical-coin-win-1936.mp3"></audio>
+<audio id="mergeSound" src="https://assets.mixkit.co/sfx/preview/mixkit-magic-notification-2342.mp3"></audio>
 
 <script>
 const COLS=5, MAX_HEIGHT=6;
-let board=[], score=0, nextTile;
+let board=[], score=0, nextTile, comboCount=0;
 
 const boardDiv=document.getElementById("board");
 const scoreSpan=document.getElementById("score");
 const nextSpan=document.getElementById("next");
-const dropSound=document.getElementById("dropSound");
+const gameDiv=document.getElementById("game");
 const mergeSound=document.getElementById("mergeSound");
 
 function randomTile(){
@@ -170,11 +190,12 @@ function randomTile(){
 function init(){
   board=Array.from({length:COLS},()=>[]);
   score=0;
+  comboCount=0;
   nextTile=randomTile();
   draw();
 }
 
-function draw(newPos=null, mergedPos=null){
+function draw(newPos=null, mergedPos=null, mergedValue=0){
   boardDiv.innerHTML="";
   scoreSpan.textContent=score;
   nextSpan.textContent=nextTile;
@@ -187,15 +208,13 @@ function draw(newPos=null, mergedPos=null){
     col.forEach((v,ri)=>{
       const t=document.createElement("div");
       t.className="tile n"+v;
-
-      if(newPos && newPos.c===ci && newPos.r===ri)
-        t.classList.add("new");
-
+      if(newPos && newPos.c===ci && newPos.r===ri) t.classList.add("new");
       if(mergedPos && mergedPos.c===ci && mergedPos.r===ri){
         t.classList.add("merge");
-        createSparks(t);
+        explode(t, v);
+        comboText(v);
+        if(v>=1024) screenShake();
       }
-
       t.textContent=v>=8192?"👑 "+v:v;
       c.appendChild(t);
     });
@@ -203,25 +222,43 @@ function draw(newPos=null, mergedPos=null){
   });
 }
 
-function createSparks(tile){
-  for(let i=0;i<6;i++){
-    const s=document.createElement("div");
-    s.className="spark";
-    s.style.setProperty("--x",(Math.random()*40-20)+"px");
-    s.style.setProperty("--y",(Math.random()*40-20)+"px");
-    tile.appendChild(s);
-    setTimeout(()=>s.remove(),450);
+function explode(tile,value){
+  mergeSound.currentTime=0; mergeSound.play();
+  const count=value>=1024?14:value>=512?10:6;
+  for(let i=0;i<count;i++){
+    const p=document.createElement("div");
+    p.className="particle";
+    p.style.setProperty("--x",(Math.random()*60-30)+"px");
+    p.style.setProperty("--y",(Math.random()*60-30)+"px");
+    tile.appendChild(p);
+    setTimeout(()=>p.remove(),600);
   }
+}
+
+function comboText(value){
+  comboCount++;
+  let text="Nice!";
+  if(comboCount>=2) text="Great!";
+  if(comboCount>=3) text="Awesome!";
+  if(comboCount>=4) text="Legendary!";
+  const d=document.createElement("div");
+  d.className="combo";
+  d.textContent=text;
+  document.body.appendChild(d);
+  setTimeout(()=>d.remove(),800);
+}
+
+function screenShake(){
+  gameDiv.classList.add("shake");
+  setTimeout(()=>gameDiv.classList.remove("shake"),150);
 }
 
 function drop(c){
   if(board[c].length>=MAX_HEIGHT) return;
-
-  dropSound.currentTime=0; dropSound.play();
   board[c].push(nextTile);
 
   let newPos={c:c,r:board[c].length-1};
-  let mergedPos=null;
+  let mergedPos=null, mergedValue=0;
 
   while(board[c].length>=2){
     let a=board[c].at(-1), b=board[c].at(-2);
@@ -231,12 +268,12 @@ function drop(c){
       board[c].push(nv);
       score+=nv;
       mergedPos={c:c,r:board[c].length-1};
-      mergeSound.currentTime=0; mergeSound.play();
+      mergedValue=nv;
     } else break;
   }
 
   nextTile=randomTile();
-  draw(newPos, mergedPos);
+  draw(newPos, mergedPos, mergedValue);
   checkGameOver();
 }
 
