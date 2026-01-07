@@ -2,32 +2,30 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Merge 2048 Columns Game</title>
+<title>Merge 2048 Columns PRO</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 body{
     margin:0;
-    background:#0f0f0f;
-    font-family: Arial, sans-serif;
+    background:#0b0b0b;
+    font-family:Arial, sans-serif;
     color:#fff;
     display:flex;
     justify-content:center;
     align-items:center;
     height:100vh;
 }
-.game{
-    width:360px;
-}
+.game{width:360px}
 .top{
     display:flex;
     justify-content:space-between;
     margin-bottom:10px;
 }
-.score{
-    background:#222;
+.box{
+    background:#1e1e1e;
     padding:8px 14px;
-    border-radius:8px;
+    border-radius:10px;
     font-weight:bold;
 }
 .board{
@@ -36,26 +34,42 @@ body{
     gap:6px;
     background:#111;
     padding:6px;
-    border-radius:10px;
+    border-radius:12px;
 }
 .col{
-    background:#1c1c1c;
-    border-radius:8px;
-    min-height:260px;
+    background:#1a1a1a;
+    border-radius:10px;
+    min-height:280px;
     display:flex;
     flex-direction:column-reverse;
     padding:4px;
+    cursor:pointer;
 }
 .tile{
     margin:3px 0;
-    height:42px;
-    border-radius:6px;
+    height:44px;
+    border-radius:8px;
     display:flex;
     align-items:center;
     justify-content:center;
     font-weight:bold;
     font-size:16px;
+    animation:drop .2s ease;
 }
+@keyframes drop{
+    from{transform:translateY(-15px);opacity:.4}
+    to{transform:translateY(0);opacity:1}
+}
+.merge{
+    animation:merge .2s ease;
+}
+@keyframes merge{
+    0%{transform:scale(1)}
+    50%{transform:scale(1.15)}
+    100%{transform:scale(1)}
+}
+
+/* colors */
 .n16{background:#2ecc71}
 .n32{background:#27ae60}
 .n64{background:#3498db}
@@ -65,34 +79,33 @@ body{
 .n1024{background:#d63031}
 .n2048{background:#0984e3}
 .n4096{background:#6c5ce7}
-.n8192{background:#fdcb6e;color:#000}
+.n8192,.crown{
+    background:linear-gradient(135deg,#f9ca24,#f6e58d);
+    color:#000;
+    box-shadow:0 0 12px #f9ca24;
+}
 
 .controls{
     margin-top:12px;
     text-align:center;
 }
 .next{
-    display:inline-block;
-    background:#333;
-    padding:10px 18px;
-    border-radius:10px;
+    background:#222;
+    padding:10px;
+    border-radius:12px;
     margin-bottom:8px;
     font-size:18px;
 }
 button{
-    margin-top:6px;
     width:100%;
     padding:10px;
     border:none;
-    border-radius:8px;
+    border-radius:10px;
     background:#00b894;
     color:#fff;
     font-size:16px;
-    cursor:pointer;
 }
-button:hover{
-    background:#019875;
-}
+button:hover{background:#019875}
 </style>
 </head>
 
@@ -100,8 +113,8 @@ button:hover{
 
 <div class="game">
     <div class="top">
-        <div class="score">Score: <span id="score">0</span></div>
-        <div class="score">Best</div>
+        <div class="box">Score: <span id="score">0</span></div>
+        <div class="box">PRO</div>
     </div>
 
     <div class="board" id="board"></div>
@@ -110,24 +123,30 @@ button:hover{
         <div class="next">
             Next: <span id="next">128</span>
         </div>
-        <button onclick="resetGame()">Restart Game</button>
+        <button onclick="resetGame()">Restart</button>
     </div>
 </div>
+
+<!-- SOUND EFFECTS -->
+<audio id="dropSound" src="https://assets.mixkit.co/sfx/preview/mixkit-soft-click-1123.mp3"></audio>
+<audio id="mergeSound" src="https://assets.mixkit.co/sfx/preview/mixkit-game-success-alert-2039.mp3"></audio>
 
 <script>
 const COLS = 5;
 const MAX_HEIGHT = 6;
 let board = [];
 let score = 0;
-let nextTile = randomTile();
+let nextTile;
 
 const boardDiv = document.getElementById("board");
 const scoreSpan = document.getElementById("score");
 const nextSpan = document.getElementById("next");
+const dropSound = document.getElementById("dropSound");
+const mergeSound = document.getElementById("mergeSound");
 
 function randomTile(){
-    const base = [16,32,64,128];
-    return base[Math.floor(Math.random()*base.length)];
+    const arr = [16,32,64,128];
+    return arr[Math.floor(Math.random()*arr.length)];
 }
 
 function init(){
@@ -142,15 +161,15 @@ function draw(){
     scoreSpan.textContent = score;
     nextSpan.textContent = nextTile;
 
-    board.forEach((col,colIndex)=>{
+    board.forEach((col,i)=>{
         const colDiv = document.createElement("div");
         colDiv.className="col";
-        colDiv.onclick = ()=>drop(colIndex);
+        colDiv.onclick=()=>drop(i);
 
         col.forEach(v=>{
             const t = document.createElement("div");
-            t.className = "tile n"+v;
-            t.textContent = v;
+            t.className="tile n"+v+(v>=8192?" crown":"");
+            t.textContent = v>=8192 ? "👑 "+v : v;
             colDiv.appendChild(t);
         });
 
@@ -161,19 +180,21 @@ function draw(){
 function drop(c){
     if(board[c].length>=MAX_HEIGHT) return;
 
-    let value = nextTile;
-    board[c].push(value);
+    dropSound.play();
+    board[c].push(nextTile);
 
-    while(board[c].length>=2){
-        let a = board[c][board[c].length-1];
-        let b = board[c][board[c].length-2];
+    let merged = true;
+    while(merged && board[c].length>=2){
+        let a = board[c].at(-1);
+        let b = board[c].at(-2);
         if(a===b){
             board[c].pop();
             board[c].pop();
             let nv = a*2;
             board[c].push(nv);
-            score += nv;
-        }else break;
+            score+=nv;
+            mergeSound.play();
+        }else merged=false;
     }
 
     nextTile = randomTile();
