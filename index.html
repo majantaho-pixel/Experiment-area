@@ -1,32 +1,180 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Block Puzzle 3D</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <!-- CSS -->
-  <link rel="stylesheet" href="css/style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D Roll Block Puzzle</title>
+<style>
+body {
+  margin:0;
+  background:#0d1440;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+  font-family:Arial, sans-serif;
+  color:#fff;
+  overflow:hidden;
+}
+canvas {
+  background:#050b2c;
+  border-radius:10px;
+  display:block;
+}
+#ui {
+  position:absolute;
+  top:10px;
+  left:50%;
+  transform:translateX(-50%);
+  text-align:center;
+}
+button {
+  padding:10px 20px;
+  margin:5px;
+  border:none;
+  border-radius:5px;
+  cursor:pointer;
+  background:#4CAF50;
+  color:white;
+}
+button:hover {
+  background:#45a049;
+}
+</style>
 </head>
-
 <body>
+<div id="ui">
+<h2>3D Roll Block Puzzle</h2>
+<div>Level: <span id="lvl">1</span> | Moves: <span id="score">0</span></div>
+<button onclick="restartGame()">Restart</button>
+</div>
+<canvas id="game" width="400" height="600"></canvas>
 
-  <!-- Simple UI -->
-  <div id="ui">
-    Level: <span id="level">1</span>
-  </div>
+<script>
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
 
-  <!-- Three.js library -->
-  <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
+const TILE = 60; // size of each tile
+const ROWS = 6;
+const COLS = 4;
 
-<script src="js/levels.js"></script>
-<script src="js/player.js"></script>
-<script src="js/main.js"></script>
-  
-  <!-- Game Scripts -->
-  <script src="js/levels.js"></script>
-  <script src="js/main.js"></script>
+let level = 0;
+let moves = 0;
 
+// map layout: 0=empty, 1=normal, 2=player, 3=goal red, 4=goal black
+const levels = [
+  [
+    [0,1,0,0],
+    [0,1,0,0],
+    [0,1,1,0],
+    [0,0,1,0],
+    [0,3,1,0],
+    [0,0,0,0]
+  ],
+  [
+    [0,1,1,0],
+    [0,0,1,0],
+    [0,0,1,0],
+    [0,0,1,0],
+    [0,2,3,0],
+    [0,0,0,0]
+  ]
+];
+
+let map = JSON.parse(JSON.stringify(levels[level]));
+let px, py, dirX=0, dirY=0, animating=false, angle=0;
+
+function findPlayer(){
+  for(let y=0;y<ROWS;y++)
+    for(let x=0;x<COLS;x++)
+      if(map[y][x]==2){ px=x; py=y; return; }
+}
+findPlayer();
+
+function drawTile(x,y,type){
+  const baseColor = type==1?'#aaa': type==3?'#f00': type==4?'#000':'#050b2c';
+  ctx.fillStyle = baseColor;
+  ctx.save();
+  ctx.translate(x*TILE, y*TILE);
+  ctx.transform(1,0,0,0.5,0,0); // simple isometric tilt
+  ctx.fillRect(0,0,TILE,TILE);
+  ctx.restore();
+}
+
+function drawBlock(){
+  ctx.save();
+  ctx.translate(px*TILE + TILE/2, py*TILE + TILE/2);
+  ctx.rotateX = angle; // placeholder for rotation
+  ctx.fillStyle = '#00f';
+  ctx.fillRect(-TILE/2,-TILE/2,TILE,TILE);
+  ctx.restore();
+}
+
+function draw(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  for(let y=0;y<ROWS;y++)
+    for(let x=0;x<COLS;x++)
+      drawTile(x,y,map[y][x]);
+  // draw player block
+  ctx.fillStyle='#00f';
+  ctx.fillRect(px*TILE, py*TILE, TILE, TILE);
+}
+
+function moveBlock(dx,dy){
+  if(animating) return;
+  const nx = px + dx;
+  const ny = py + dy;
+  if(ny<0 || ny>=ROWS || nx<0 || nx>=COLS) return;
+  if(map[ny][nx]===0) return;
+  px = nx; py = ny;
+  moves++;
+  document.getElementById('score').innerText = moves;
+  if(map[ny][nx]===3){ // reached red goal
+    level++;
+    if(level>=levels.length){ alert('You Win! Total moves: '+moves); restartGame(); return; }
+    map = JSON.parse(JSON.stringify(levels[level]));
+    findPlayer();
+    document.getElementById('lvl').innerText = level+1;
+    moves=0;
+    document.getElementById('score').innerText = moves;
+  }
+  draw();
+}
+
+document.addEventListener('keydown', e=>{
+  if(e.key==='ArrowUp') moveBlock(0,-1);
+  if(e.key==='ArrowDown') moveBlock(0,1);
+  if(e.key==='ArrowLeft') moveBlock(-1,0);
+  if(e.key==='ArrowRight') moveBlock(1,0);
+});
+
+// touch support
+let startX, startY;
+canvas.addEventListener('touchstart',e=>{
+  startX = e.touches[0].clientX;
+  startY = e.touches[0].clientY;
+});
+canvas.addEventListener('touchend',e=>{
+  const dx = e.changedTouches[0].clientX - startX;
+  const dy = e.changedTouches[0].clientY - startY;
+  if(Math.abs(dx)>Math.abs(dy)){
+    dx>0?moveBlock(1,0):moveBlock(-1,0);
+  }else{
+    dy>0?moveBlock(0,1):moveBlock(0,-1);
+  }
+});
+
+function restartGame(){
+  level = 0;
+  moves = 0;
+  map = JSON.parse(JSON.stringify(levels[level]));
+  findPlayer();
+  document.getElementById('lvl').innerText = level+1;
+  document.getElementById('score').innerText = moves;
+  draw();
+}
+
+draw();
+</script>
 </body>
 </html>
