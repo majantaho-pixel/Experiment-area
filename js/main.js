@@ -29,9 +29,18 @@ const floor = new THREE.Mesh(
 );
 scene.add(floor);
 
-// Animation loop
+// Animate loop
 function animate() {
   requestAnimationFrame(animate);
   renderer.render(scene, camera);
 }
 animate();
+
+// Player movement
+document.addEventListener("keydown", (e) => {
+  const step = 1;
+  if (e.key === "ArrowUp") player.position.z -= step;
+  if (e.key === "ArrowDown") player.position.z += step;
+  if (e.key === "ArrowLeft") player.position.x -= step;
+  if (e.key === "ArrowRight") player.position.x += step;
+});
