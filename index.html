@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Merge 2048 – Next FX Levels</title>
+<title>Merge 2048 – Next FX Smart Target</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -107,6 +107,7 @@ function load(){
   if(s){const d=JSON.parse(s);board=d.board;score=d.score;level=d.level;nextTile=d.nextTile}
   else{board=Array.from({length:COLS},()=>[]);}
 }
+
 function draw(newPos=null, mergedPos=null, mergedValue=0){
   boardDiv.innerHTML="";
   board.forEach((col,ci)=>{
@@ -141,16 +142,16 @@ function explode(tile,value){
 }
 
 let comboCount=0;
-function comboText(value){
-  comboCount++;if(comboCount>4) comboCount=4;
+function comboText(value){comboCount++;if(comboCount>4) comboCount=4;
   const d=document.createElement("div");d.className="combo";
   d.textContent=celebrations[Math.floor(Math.random()*celebrations.length)];
   document.body.appendChild(d);setTimeout(()=>d.remove(),800);
 }
 
 function screenShake(){gameDiv.classList.add("shake");setTimeout(()=>gameDiv.classList.remove("shake"),150)}
-
 function trophy(){if(level%10===0){const t=document.createElement("div");t.className="trophy";t.textContent=trophies[Math.floor(level/10)-1];document.body.appendChild(t);setTimeout(()=>t.remove(),2000);}}
+
+function celebrate(){const d=document.createElement("div");d.className="celebration";d.textContent=celebrations[Math.floor(Math.random()*celebrations.length)];document.body.appendChild(d);setTimeout(()=>d.remove(),1000)}
 
 function drop(c){
   if(board[c].length>=MAX_HEIGHT)return;
@@ -158,16 +159,20 @@ function drop(c){
   let newPos={c:c,r:board[c].length-1},mergedPos=null,mergedValue=0;
   while(board[c].length>=2){
     let a=board[c].at(-1),b=board[c].at(-2);
-    if(a===b){board[c].pop();board[c].pop();let nv=a*2;board[c].push(nv);score+=nv;mergedPos={c:c,r:board[c].length-1};mergedValue=nv;
-      if(nv>=levelTargets[level-1]){level++;celebrate();trophy();}}
-    else break;
+    if(a===b){
+      board[c].pop();board[c].pop();let nv=a*2;board[c].push(nv);score+=nv;
+      mergedPos={c:c,r:board[c].length-1};mergedValue=nv;
+      if(nv>=levelTargets[level-1]){
+        level++;celebrate();trophy();
+      }
+    }else break;
   }
-  nextTile=[16,32,64,128][Math.floor(Math.random()*4)];
+  // Next tile logic: only smaller than current target
+  const options=[16,32,64,128].filter(x=>x<=levelTargets[level-1]);
+  nextTile=options[Math.floor(Math.random()*options.length)];
   save();
   draw(newPos,mergedPos,mergedValue);
 }
-
-function celebrate(){const d=document.createElement("div");d.className="celebration";d.textContent=celebrations[Math.floor(Math.random()*celebrations.length)];document.body.appendChild(d);setTimeout(()=>d.remove(),1000)}
 
 load();draw();
 </script>
