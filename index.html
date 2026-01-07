@@ -2,170 +2,123 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Merge 2048 – LEVEL SYSTEM</title>
+<title>Merge 2048 – Next FX Levels</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
+:root{--radius:14px;}
 body{
   margin:0;
   background:radial-gradient(circle at top,#111,#050505);
-  font-family:system-ui,Arial;
+  font-family:system-ui,Segoe UI,Arial;
   color:#fff;
   display:flex;
   justify-content:center;
   align-items:center;
   height:100vh;
 }
-.game{width:360px}
-.top{
-  display:flex;
-  justify-content:space-between;
-  margin-bottom:8px;
+.game{width:360px;transition:transform .15s}
+.shake{animation:shake .15s}
+@keyframes shake{
+  0%{transform:translate(0)}
+  25%{transform:translate(-4px,2px)}
+  50%{transform:translate(4px,-2px)}
+  75%{transform:translate(-3px,1px)}
+  100%{transform:translate(0)}
 }
-.box{
-  background:#1a1a1a;
-  padding:6px 10px;
-  border-radius:10px;
-  font-size:13px;
-  font-weight:600;
-}
-.board{
-  display:grid;
-  grid-template-columns:repeat(5,1fr);
-  gap:6px;
-  background:#0c0c0c;
-  padding:6px;
-  border-radius:14px;
-}
-.col{
-  background:#141414;
-  border-radius:12px;
-  min-height:280px;
-  display:flex;
-  flex-direction:column-reverse;
-  padding:5px;
-}
-.tile{
-  height:44px;
-  margin:4px 0;
-  border-radius:12px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:800;
-  animation:drop .25s;
-}
-@keyframes drop{
-  from{transform:translateY(-20px);opacity:.3}
-  to{transform:none;opacity:1}
-}
-.n16{background:#2ecc71}
-.n32{background:#27ae60}
-.n64{background:#3498db}
-.n128{background:#9b59b6}
-.n256{background:#e84393}
-.n512{background:#e17055}
-.n1024{background:#fdcb6e;color:#000}
-.n2048{background:#00cec9;color:#000}
-.n4096{background:#6c5ce7}
-.n8192{background:#f9ca24;color:#000}
-.n16384{background:#ffeaa7;color:#000}
-.controls{text-align:center;margin-top:10px}
-.next{background:#1b1b1b;padding:8px;border-radius:10px;margin-bottom:6px}
 
-.celebration{
-  position:fixed;
-  top:35%;
-  font-size:30px;
-  font-weight:900;
-  animation:celebrate 1s ease forwards;
-}
-@keyframes celebrate{
-  from{opacity:0;transform:scale(.5)}
-  40%{opacity:1;transform:scale(1.2)}
-  to{opacity:0;transform:scale(1.5)}
-}
-.muslim{color:gold;text-shadow:0 0 15px gold}
+.top{display:flex;justify-content:space-between;margin-bottom:10px}
+.box{background:linear-gradient(145deg,#1e1e1e,#141414);padding:8px 14px;border-radius:12px;font-weight:600;box-shadow:inset 0 0 0 1px #2a2a2a}
+.board{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;background:#0d0d0d;padding:6px;border-radius:18px}
+.col{background:linear-gradient(#161616,#101010);border-radius:16px;min-height:300px;display:flex;flex-direction:column-reverse;padding:5px;cursor:pointer;box-shadow:inset 0 0 0 1px #1f1f1f}
+.tile{position:relative;height:46px;margin:4px 0;border-radius:14px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;letter-spacing:.4px;box-shadow:inset 0 1px 0 rgba(255,255,255,.25),inset 0 -2px 6px rgba(0,0,0,.35),0 6px 14px rgba(0,0,0,.45);}
+.new{animation:drop .28s cubic-bezier(.18,.89,.32,1.28)}
+@keyframes drop{from{transform:translateY(-22px) scale(.92);opacity:.2}to{transform:none;opacity:1}}
+.merge{animation:merge .25s ease-out;}
+@keyframes merge{0%{transform:scale(1)}50%{transform:scale(1.18)}100%{transform:scale(1)}}
+.spark{position:absolute;width:6px;height:6px;background:gold;border-radius:50%;animation:spark .45s ease-out forwards;}
+@keyframes spark{from{transform:scale(1);opacity:1}to{transform:translate(var(--x),var(--y)) scale(0);opacity:0}}
+.combo{position:fixed;top:30%;font-size:32px;font-weight:900;text-shadow:0 6px 20px #000;animation:combo .8s ease-out forwards;pointer-events:none;}
+@keyframes combo{from{opacity:0;transform:scale(.6)}30%{opacity:1;transform:scale(1.2)}to{opacity:0;transform:scale(1.4)}}
 
-.trophy{
-  position:fixed;
-  top:10%;
-  font-size:36px;
-  animation:trophy 1.2s ease forwards;
-}
-@keyframes trophy{
-  from{opacity:0;transform:translateY(-20px)}
-  to{opacity:1;transform:none}
-}
+.n16{background:linear-gradient(135deg,#55efc4,#00b894)}
+.n32{background:linear-gradient(135deg,#00cec9,#0984e3)}
+.n64{background:linear-gradient(135deg,#74b9ff,#6c5ce7)}
+.n128{background:linear-gradient(135deg,#a29bfe,#6c5ce7)}
+.n256{background:linear-gradient(135deg,#ff7675,#e84393)}
+.n512{background:linear-gradient(135deg,#fab1a0,#e17055)}
+.n1024{background:linear-gradient(135deg,#ffeaa7,#fdcb6e);color:#000}
+.n2048{background:linear-gradient(135deg,#81ecec,#00cec9);color:#000}
+.n4096{background:linear-gradient(135deg,#74b9ff,#0984e3)}
+.n8192,.crown{background:linear-gradient(135deg,#f9ca24,#fff3b0);color:#000;text-shadow:0 1px 0 #fff;box-shadow:0 0 18px rgba(249,202,36,.9),inset 0 1px 0 #fff;}
+
+.controls{margin-top:12px;text-align:center}
+.next{background:linear-gradient(#1e1e1e,#151515);padding:10px;border-radius:14px;margin-bottom:8px;font-size:18px}
+button{width:100%;padding:11px;border:none;border-radius:14px;background:linear-gradient(135deg,#00b894,#019875);color:#fff;font-size:16px}
+
+.celebration{position:fixed;top:35%;font-size:30px;font-weight:900;animation:celebrate 1s ease forwards;}
+@keyframes celebrate{from{opacity:0;transform:scale(.5)}40%{opacity:1;transform:scale(1.2)}to{opacity:0;transform:scale(1.5)}}
+
+.trophy{position:fixed;top:10%;font-size:36px;animation:trophy 1.2s ease forwards;}
+@keyframes trophy{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:none}}
 </style>
 </head>
 
 <body>
-
-<div class="game">
+<div class="game" id="game">
   <div class="top">
     <div class="box">Level: <span id="level">1</span></div>
     <div class="box">Target: <span id="target">128</span></div>
     <div class="box">Score: <span id="score">0</span></div>
   </div>
-
   <div class="board" id="board"></div>
-
   <div class="controls">
     <div class="next">Next: <span id="next">128</span></div>
   </div>
 </div>
 
+<audio id="dropSound" src="https://assets.mixkit.co/sfx/preview/mixkit-soft-click-1123.mp3"></audio>
+<audio id="mergeSound" src="https://assets.mixkit.co/sfx/preview/mixkit-magical-coin-win-1936.mp3"></audio>
+
 <script>
 const COLS=5, MAX_HEIGHT=6;
-let board=[], score=0;
-let level=1, nextTile=128;
-
-const levelTargets=[...Array(50)].map((_,i)=>128*Math.pow(2,i));
-
-const celebrations=[
-"Awesome!","Incredible!","Bravo!","Fantastic!","Outstanding!",
-"Magnificent!","Unstoppable!","Legend Rising!","Power Unlocked!",
-"Victory!","Champion!","Elite!","Masterclass!","Glorious!","Divine Move!"
-];
-
-const muslimTexts=[
-"✨ Alhamdulillah ✨",
-"✨ SubhanAllah ✨",
-"✨ MashaAllah ✨",
-"✨ Allahu Akbar ✨"
-];
-
-const trophies=["🥉 Bronze","🥈 Silver","🥇 Gold","💎 Epic","👑 Legendary"];
+let board=[],score=0,level=1,nextTile=128;
 
 const boardDiv=document.getElementById("board");
 const scoreSpan=document.getElementById("score");
 const nextSpan=document.getElementById("next");
 const levelSpan=document.getElementById("level");
 const targetSpan=document.getElementById("target");
+const gameDiv=document.getElementById("game");
+const dropSound=document.getElementById("dropSound");
+const mergeSound=document.getElementById("mergeSound");
 
-function save(){
-  localStorage.setItem("mergeSave",JSON.stringify({board,score,level,nextTile}));
-}
+const levelTargets=[...Array(50)].map((_,i)=>128*Math.pow(2,i));
+const celebrations=[
+"Awesome!","Incredible!","Bravo!","Fantastic!","Outstanding!",
+"Magnificent!","Unstoppable!","Legend Rising!","Power Unlocked!",
+"Victory!","Champion!","Elite!","Masterclass!","Glorious!","Divine Move!"
+];
+const trophies=["🥉 Bronze","🥈 Silver","🥇 Gold","💎 Epic","👑 Legendary"];
+
+function save(){localStorage.setItem("mergeNextFX",JSON.stringify({board,score,level,nextTile}))}
 function load(){
-  const s=localStorage.getItem("mergeSave");
-  if(s){
-    const d=JSON.parse(s);
-    board=d.board; score=d.score; level=d.level; nextTile=d.nextTile;
-  }else{
-    board=Array.from({length:COLS},()=>[]);
-  }
+  const s=localStorage.getItem("mergeNextFX");
+  if(s){const d=JSON.parse(s);board=d.board;score=d.score;level=d.level;nextTile=d.nextTile}
+  else{board=Array.from({length:COLS},()=>[]);}
 }
-function draw(){
+function draw(newPos=null, mergedPos=null, mergedValue=0){
   boardDiv.innerHTML="";
-  board.forEach((col,i)=>{
-    const c=document.createElement("div");
-    c.className="col";
-    c.onclick=()=>drop(i);
-    col.forEach(v=>{
-      const t=document.createElement("div");
-      t.className="tile n"+v;
-      t.textContent=v;
+  board.forEach((col,ci)=>{
+    const c=document.createElement("div");c.className="col";c.onclick=()=>drop(ci);
+    col.forEach((v,ri)=>{
+      const t=document.createElement("div");t.className="tile n"+v;
+      if(newPos && newPos.c===ci && newPos.r===ri) t.classList.add("new");
+      if(mergedPos && mergedPos.c===ci && mergedPos.r===ri){
+        t.classList.add("merge");explode(t,v);comboText(v);
+        if(v>=1024) screenShake();
+      }
+      t.textContent=v>=8192?"👑 "+v:v;
       c.appendChild(t);
     });
     boardDiv.appendChild(c);
@@ -176,53 +129,47 @@ function draw(){
   targetSpan.textContent=levelTargets[level-1];
 }
 
-function celebrate(){
-  const d=document.createElement("div");
-  const isMuslim=level>=30;
-  d.className="celebration"+(isMuslim?" muslim":"");
-  d.textContent=isMuslim
-    ? muslimTexts[Math.floor(Math.random()*muslimTexts.length)]
-    : celebrations[Math.floor(Math.random()*celebrations.length)];
-  document.body.appendChild(d);
-  setTimeout(()=>d.remove(),1000);
-}
-
-function trophy(){
-  if(level%10===0){
-    const t=document.createElement("div");
-    t.className="trophy";
-    t.textContent=trophies[Math.floor(level/10)-1];
-    document.body.appendChild(t);
-    setTimeout(()=>t.remove(),2000);
+function explode(tile,value){
+  mergeSound.currentTime=0;mergeSound.play();
+  const count=value>=1024?14:value>=512?10:6;
+  for(let i=0;i<count;i++){
+    const p=document.createElement("div");p.className="spark";
+    p.style.setProperty("--x",(Math.random()*60-30)+"px");
+    p.style.setProperty("--y",(Math.random()*60-30)+"px");
+    tile.appendChild(p);setTimeout(()=>p.remove(),450);
   }
 }
+
+let comboCount=0;
+function comboText(value){
+  comboCount++;if(comboCount>4) comboCount=4;
+  const d=document.createElement("div");d.className="combo";
+  d.textContent=celebrations[Math.floor(Math.random()*celebrations.length)];
+  document.body.appendChild(d);setTimeout(()=>d.remove(),800);
+}
+
+function screenShake(){gameDiv.classList.add("shake");setTimeout(()=>gameDiv.classList.remove("shake"),150)}
+
+function trophy(){if(level%10===0){const t=document.createElement("div");t.className="trophy";t.textContent=trophies[Math.floor(level/10)-1];document.body.appendChild(t);setTimeout(()=>t.remove(),2000);}}
 
 function drop(c){
   if(board[c].length>=MAX_HEIGHT)return;
   board[c].push(nextTile);
-
+  let newPos={c:c,r:board[c].length-1},mergedPos=null,mergedValue=0;
   while(board[c].length>=2){
     let a=board[c].at(-1),b=board[c].at(-2);
-    if(a===b){
-      board[c].pop();board[c].pop();
-      let nv=a*2;
-      board[c].push(nv);
-      score+=nv;
-      if(nv>=levelTargets[level-1]){
-        level++;
-        celebrate();
-        trophy();
-      }
-    }else break;
+    if(a===b){board[c].pop();board[c].pop();let nv=a*2;board[c].push(nv);score+=nv;mergedPos={c:c,r:board[c].length-1};mergedValue=nv;
+      if(nv>=levelTargets[level-1]){level++;celebrate();trophy();}}
+    else break;
   }
   nextTile=[16,32,64,128][Math.floor(Math.random()*4)];
   save();
-  draw();
+  draw(newPos,mergedPos,mergedValue);
 }
 
-load();
-draw();
-</script>
+function celebrate(){const d=document.createElement("div");d.className="celebration";d.textContent=celebrations[Math.floor(Math.random()*celebrations.length)];document.body.appendChild(d);setTimeout(()=>d.remove(),1000)}
 
+load();draw();
+</script>
 </body>
 </html>
