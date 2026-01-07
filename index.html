@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Merge 2048 – Next FX Smart Target + Reset</title>
+<title>Merge 2048 – Next FX Arcade Ultimate</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -43,7 +43,14 @@ body{
 .box{background:linear-gradient(145deg,#1e1e1e,#141414);padding:8px 14px;border-radius:12px;font-weight:600;box-shadow:inset 0 0 0 1px #2a2a2a}
 .board{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;background:#0d0d1a;padding:6px;border-radius:18px}
 .col{background:linear-gradient(#161616,#101010);border-radius:16px;min-height:300px;display:flex;flex-direction:column-reverse;padding:5px;cursor:pointer;box-shadow:inset 0 0 0 1px #1f1f1f}
-.tile{position:relative;height:46px;margin:4px 0;border-radius:14px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;letter-spacing:.4px;box-shadow:inset 0 1px 0 rgba(255,255,255,.25),inset 0 -2px 6px rgba(0,0,0,.35),0 6px 14px rgba(0,0,0,.45);}
+.tile{
+  position:relative;height:46px;margin:4px 0;border-radius:14px;
+  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;letter-spacing:.4px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.25),inset 0 -2px 6px rgba(0,0,0,.35),0 6px 14px rgba(0,0,0,.45);
+  transition:0.2s all;
+}
+.tile.glow{box-shadow:0 0 15px 5px gold, inset 0 1px 0 rgba(255,255,255,.25),inset 0 -2px 6px rgba(0,0,0,.35);}
+
 .new{animation:drop .28s cubic-bezier(.18,.89,.32,1.28)}
 @keyframes drop{from{transform:translateY(-22px) scale(.92);opacity:.2}to{transform:none;opacity:1}}
 .merge{animation:merge .25s ease-out;}
@@ -96,7 +103,7 @@ button{width:100%;padding:11px;margin-top:6px;border:none;border-radius:14px;bac
 <script>
 // Background stars
 const starsDiv=document.getElementById("stars");
-for(let i=0;i<100;i++){
+for(let i=0;i<120;i++){
   const s=document.createElement("div");s.className="star";
   s.style.top=Math.random()*100+"%";
   s.style.left=Math.random()*100+"%";
@@ -131,6 +138,7 @@ function load(){
   if(s){const d=JSON.parse(s);board=d.board;score=d.score;level=d.level;nextTile=d.nextTile}
   else{board=Array.from({length:COLS},()=>[]);}
 }
+
 function draw(newPos=null, mergedPos=null, mergedValue=0){
   boardDiv.innerHTML="";
   board.forEach((col,ci)=>{
@@ -139,8 +147,11 @@ function draw(newPos=null, mergedPos=null, mergedValue=0){
       const t=document.createElement("div");t.className="tile n"+v;
       if(newPos && newPos.c===ci && newPos.r===ri) t.classList.add("new");
       if(mergedPos && mergedPos.c===ci && mergedPos.r===ri){
-        t.classList.add("merge");explode(t,v);comboText(v);
-        if(v>=1024) screenShake();
+        t.classList.add("merge","glow");
+        explode(t,v);
+        comboText(v);
+        if(v>=1024) slowMotionMerge();
+        setTimeout(()=>t.classList.remove("glow"),400);
       }
       t.textContent=v>=8192?"👑 "+v:v;
       c.appendChild(t);
@@ -155,24 +166,31 @@ function draw(newPos=null, mergedPos=null, mergedValue=0){
 
 function explode(tile,value){
   mergeSound.currentTime=0;mergeSound.play();
-  const count=value>=1024?14:value>=512?10:6;
+  const count=value>=1024?16:value>=512?10:6;
   for(let i=0;i<count;i++){
     const p=document.createElement("div");p.className="spark";
-    p.style.setProperty("--x",(Math.random()*60-30)+"px");
-    p.style.setProperty("--y",(Math.random()*60-30)+"px");
+    p.style.setProperty("--x",(Math.random()*80-40)+"px");
+    p.style.setProperty("--y",(Math.random()*80-40)+"px");
     tile.appendChild(p);setTimeout(()=>p.remove(),450);
   }
 }
 
 function comboText(value){
   const d=document.createElement("div");d.className="combo";
+  d.style.fontSize=value>=1024?"48px":"32px";
   d.textContent=celebrations[Math.floor(Math.random()*celebrations.length)];
-  document.body.appendChild(d);setTimeout(()=>d.remove(),800);
+  document.body.appendChild(d);setTimeout(()=>d.remove(),1000);
 }
 
 function screenShake(){gameDiv.classList.add("shake");setTimeout(()=>gameDiv.classList.remove("shake"),150)}
 function trophy(){if(level%3===0){const t=document.createElement("div");t.className="trophy";t.textContent=trophies[Math.floor(level/3-1)]||"🏆";document.body.appendChild(t);setTimeout(()=>t.remove(),2000);}}
 function celebrate(){const d=document.createElement("div");d.className="celebration";d.textContent=celebrations[Math.floor(Math.random()*celebrations.length)];document.body.appendChild(d);setTimeout(()=>d.remove(),1000)}
+
+function slowMotionMerge(){
+  gameDiv.style.transition="transform .5s";
+  screenShake();
+  setTimeout(()=>{gameDiv.style.transition="transform .15s";},500);
+}
 
 function drop(c){
   if(board[c].length>=MAX_HEIGHT)return;
@@ -188,7 +206,7 @@ function drop(c){
       }
     }else break;
   }
-  // Next tile options only smaller than current target
+  // Next tile smaller than current target
   const options=[16,32,64,128].filter(x=>x<=levelTargets[level-1]);
   nextTile=options[Math.floor(Math.random()*options.length)];
   save();
