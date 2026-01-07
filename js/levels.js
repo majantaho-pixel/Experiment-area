@@ -1,0 +1,23 @@
+// 20 levels data (simple grid style)
+const levels = [
+  { size: [5,5], player: [1,1], goal: [4,4], walls: [[2,2]] },
+  { size: [6,6], player: [1,1], goal: [5,5], walls: [[2,2],[3,3]] },
+  { size: [6,6], player: [0,0], goal: [5,3], walls: [[1,2],[2,2]] },
+  { size: [6,6], player: [1,1], goal: [5,4], walls: [[2,3],[3,3]] },
+  { size: [5,5], player: [0,0], goal: [4,4], walls: [[1,1],[2,2]] },
+  { size: [6,6], player: [0,1], goal: [5,5], walls: [[2,2],[3,3],[4,4]] },
+  { size: [5,5], player: [0,0], goal: [4,3], walls: [[1,2],[2,1]] },
+  { size: [6,6], player: [1,0], goal: [5,4], walls: [[2,2],[3,1]] },
+  { size: [5,5], player: [0,0], goal: [4,4], walls: [[1,1],[2,2],[3,3]] },
+  { size: [6,6], player: [0,1], goal: [5,5], walls: [[2,2],[3,3]] },
+  { size: [5,5], player: [1,0], goal: [4,4], walls: [[2,2]] },
+  { size: [6,6], player: [0,0], goal: [5,5], walls: [[1,2],[2,2],[3,3]] },
+  { size: [5,5], player: [0,1], goal: [4,4], walls: [[2,1],[3,2]] },
+  { size: [6,6], player: [1,1], goal: [5,5], walls: [[2,2],[3,3]] },
+  { size: [5,5], player: [0,0], goal: [4,3], walls: [[1,1],[2,2]] },
+  { size: [6,6], player: [1,0], goal: [5,5], walls: [[2,1],[3,2]] },
+  { size: [5,5], player: [0,1], goal: [4,4], walls: [[1,2],[2,3]] },
+  { size: [6,6], player: [0,0], goal: [5,5], walls: [[2,2],[3,3]] },
+  { size: [5,5], player: [1,1], goal: [4,4], walls: [[2,2],[3,2]] },
+  { size: [6,6], player: [0,0], goal: [5,5], walls: [[2,2],[3,3],[4,4]] },
+];
