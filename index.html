@@ -2,21 +2,33 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Merge 2048 – Next FX Smart Target</title>
+<title>Merge 2048 – Next FX Smart Target + Reset</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 :root{--radius:14px;}
 body{
   margin:0;
-  background:radial-gradient(circle at top,#111,#050505);
+  background:radial-gradient(circle at top,#0c0c20,#05050a);
   font-family:system-ui,Segoe UI,Arial;
   color:#fff;
   display:flex;
   justify-content:center;
   align-items:center;
   height:100vh;
+  overflow:hidden;
 }
+
+/* Animated background stars */
+@keyframes stars{from{transform:translateY(0)}to{transform:translateY(-1000px)}}
+.star{
+  position:absolute;
+  width:2px;height:2px;
+  background:white;
+  border-radius:50%;
+  animation:stars linear infinite;
+}
+
 .game{width:360px;transition:transform .15s}
 .shake{animation:shake .15s}
 @keyframes shake{
@@ -29,7 +41,7 @@ body{
 
 .top{display:flex;justify-content:space-between;margin-bottom:10px}
 .box{background:linear-gradient(145deg,#1e1e1e,#141414);padding:8px 14px;border-radius:12px;font-weight:600;box-shadow:inset 0 0 0 1px #2a2a2a}
-.board{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;background:#0d0d0d;padding:6px;border-radius:18px}
+.board{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;background:#0d0d1a;padding:6px;border-radius:18px}
 .col{background:linear-gradient(#161616,#101010);border-radius:16px;min-height:300px;display:flex;flex-direction:column-reverse;padding:5px;cursor:pointer;box-shadow:inset 0 0 0 1px #1f1f1f}
 .tile{position:relative;height:46px;margin:4px 0;border-radius:14px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;letter-spacing:.4px;box-shadow:inset 0 1px 0 rgba(255,255,255,.25),inset 0 -2px 6px rgba(0,0,0,.35),0 6px 14px rgba(0,0,0,.45);}
 .new{animation:drop .28s cubic-bezier(.18,.89,.32,1.28)}
@@ -39,7 +51,6 @@ body{
 .spark{position:absolute;width:6px;height:6px;background:gold;border-radius:50%;animation:spark .45s ease-out forwards;}
 @keyframes spark{from{transform:scale(1);opacity:1}to{transform:translate(var(--x),var(--y)) scale(0);opacity:0}}
 .combo{position:fixed;top:30%;font-size:32px;font-weight:900;text-shadow:0 6px 20px #000;animation:combo .8s ease-out forwards;pointer-events:none;}
-@keyframes combo{from{opacity:0;transform:scale(.6)}30%{opacity:1;transform:scale(1.2)}to{opacity:0;transform:scale(1.4)}}
 
 .n16{background:linear-gradient(135deg,#55efc4,#00b894)}
 .n32{background:linear-gradient(135deg,#00cec9,#0984e3)}
@@ -54,7 +65,7 @@ body{
 
 .controls{margin-top:12px;text-align:center}
 .next{background:linear-gradient(#1e1e1e,#151515);padding:10px;border-radius:14px;margin-bottom:8px;font-size:18px}
-button{width:100%;padding:11px;border:none;border-radius:14px;background:linear-gradient(135deg,#00b894,#019875);color:#fff;font-size:16px}
+button{width:100%;padding:11px;margin-top:6px;border:none;border-radius:14px;background:linear-gradient(135deg,#00b894,#019875);color:#fff;font-size:16px}
 
 .celebration{position:fixed;top:35%;font-size:30px;font-weight:900;animation:celebrate 1s ease forwards;}
 @keyframes celebrate{from{opacity:0;transform:scale(.5)}40%{opacity:1;transform:scale(1.2)}to{opacity:0;transform:scale(1.5)}}
@@ -65,6 +76,7 @@ button{width:100%;padding:11px;border:none;border-radius:14px;background:linear-
 </head>
 
 <body>
+<div id="stars"></div>
 <div class="game" id="game">
   <div class="top">
     <div class="box">Level: <span id="level">1</span></div>
@@ -74,6 +86,7 @@ button{width:100%;padding:11px;border:none;border-radius:14px;background:linear-
   <div class="board" id="board"></div>
   <div class="controls">
     <div class="next">Next: <span id="next">128</span></div>
+    <button id="resetBtn">Reset Game</button>
   </div>
 </div>
 
@@ -81,6 +94,16 @@ button{width:100%;padding:11px;border:none;border-radius:14px;background:linear-
 <audio id="mergeSound" src="https://assets.mixkit.co/sfx/preview/mixkit-magical-coin-win-1936.mp3"></audio>
 
 <script>
+// Background stars
+const starsDiv=document.getElementById("stars");
+for(let i=0;i<100;i++){
+  const s=document.createElement("div");s.className="star";
+  s.style.top=Math.random()*100+"%";
+  s.style.left=Math.random()*100+"%";
+  s.style.animationDuration=(5+Math.random()*10)+"s";
+  starsDiv.appendChild(s);
+}
+
 const COLS=5, MAX_HEIGHT=6;
 let board=[],score=0,level=1,nextTile=128;
 
@@ -92,6 +115,7 @@ const targetSpan=document.getElementById("target");
 const gameDiv=document.getElementById("game");
 const dropSound=document.getElementById("dropSound");
 const mergeSound=document.getElementById("mergeSound");
+const resetBtn=document.getElementById("resetBtn");
 
 const levelTargets=[...Array(50)].map((_,i)=>128*Math.pow(2,i));
 const celebrations=[
@@ -107,7 +131,6 @@ function load(){
   if(s){const d=JSON.parse(s);board=d.board;score=d.score;level=d.level;nextTile=d.nextTile}
   else{board=Array.from({length:COLS},()=>[]);}
 }
-
 function draw(newPos=null, mergedPos=null, mergedValue=0){
   boardDiv.innerHTML="";
   board.forEach((col,ci)=>{
@@ -141,16 +164,14 @@ function explode(tile,value){
   }
 }
 
-let comboCount=0;
-function comboText(value){comboCount++;if(comboCount>4) comboCount=4;
+function comboText(value){
   const d=document.createElement("div");d.className="combo";
   d.textContent=celebrations[Math.floor(Math.random()*celebrations.length)];
   document.body.appendChild(d);setTimeout(()=>d.remove(),800);
 }
 
 function screenShake(){gameDiv.classList.add("shake");setTimeout(()=>gameDiv.classList.remove("shake"),150)}
-function trophy(){if(level%10===0){const t=document.createElement("div");t.className="trophy";t.textContent=trophies[Math.floor(level/10)-1];document.body.appendChild(t);setTimeout(()=>t.remove(),2000);}}
-
+function trophy(){if(level%3===0){const t=document.createElement("div");t.className="trophy";t.textContent=trophies[Math.floor(level/3-1)]||"🏆";document.body.appendChild(t);setTimeout(()=>t.remove(),2000);}}
 function celebrate(){const d=document.createElement("div");d.className="celebration";d.textContent=celebrations[Math.floor(Math.random()*celebrations.length)];document.body.appendChild(d);setTimeout(()=>d.remove(),1000)}
 
 function drop(c){
@@ -167,11 +188,18 @@ function drop(c){
       }
     }else break;
   }
-  // Next tile logic: only smaller than current target
+  // Next tile options only smaller than current target
   const options=[16,32,64,128].filter(x=>x<=levelTargets[level-1]);
   nextTile=options[Math.floor(Math.random()*options.length)];
   save();
   draw(newPos,mergedPos,mergedValue);
+}
+
+// Reset button
+resetBtn.onclick=()=>{
+  board=Array.from({length:COLS},()=>[]);
+  score=0; level=1; nextTile=128;
+  save(); draw();
 }
 
 load();draw();
