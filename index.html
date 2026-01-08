@@ -14,21 +14,11 @@ body{
   color:#fff;
   display:flex;
   justify-content:center;
-  align-items:flex-start;   /* 🔥 change */
+  align-items:center;
   height:100vh;
   overflow:hidden;
-  padding-top:60px;         /* 🔥 add */
 }
-<div id="creator">© Raza FX</div>
-  #creator{
-  position:fixed;
-  bottom:6px;
-  right:8px;
-  font-size:11px;
-  opacity:0.6;
-  pointer-events:none;
-}
-  
+
 /* Background stars */
 @keyframes stars{from{transform:translateY(0)}to{transform:translateY(-1000px)}}
 .star{
@@ -36,22 +26,7 @@ body{
   animation:stars linear infinite;
 }
 
-..game{
-  width:360px;
-  transition:transform .15s;
-  position:relative;
-  margin-top:20px;   /* 🔥 add */
-}
-  <div id="creator">©Zeeshan</div>
-  #creator{
-  position:absolute;
-  bottom:-22px;
-  right:6px;
-  font-size:11px;
-  opacity:0.6;
-  pointer-events:none;
-}
-  
+.game{width:360px;transition:transform .15s;position:relative;}
 .shake{animation:shake .15s}
 @keyframes shake{
   0%{transform:translate(0)}
@@ -104,12 +79,8 @@ button{width:100%;padding:11px;margin-top:6px;border:none;border-radius:14px;bac
 
 /* Game title */
 #gameTitle{
-  position:absolute;
-  top:-45px;        /* 🔥 balanced */
-  left:50%;
-  transform:translateX(-50%);
-  font-size:36px;
-  font-weight:900;
+  position:absolute;top:-30px;left:50%;transform:translateX(-50%);
+  font-size:36px;font-weight:900;
   background:linear-gradient(45deg,#f9ca24,#00cec9);
   -webkit-background-clip:text;
   color:transparent;
