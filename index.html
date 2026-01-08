@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Merge 🔢 – Next FX Arcade Ultimate</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 :root{--radius:14px;}
@@ -19,15 +19,6 @@ body{
   overflow:hidden;
 }
 
-/* Desktop ko mobile jaisa lock karna */
-.game{
-  width:360px;
-  max-width:360px;
-  min-width:360px;
-  transition:transform .15s;
-  position:relative;
-}
-
 /* Background stars */
 @keyframes stars{from{transform:translateY(0)}to{transform:translateY(-1000px)}}
 .star{
@@ -35,9 +26,10 @@ body{
   animation:stars linear infinite;
 }
 
+.game{width:360px;transition:transform .15s;position:relative;}
 .shake{animation:shake .15s}
 @keyframes shake{
-  0{transform:translate(0)}
+  0%{transform:translate(0)}
   25%{transform:translate(-4px,2px)}
   50%{transform:translate(4px,-2px)}
   75%{transform:translate(-3px,1px)}
@@ -48,72 +40,219 @@ body{
 .box{background:linear-gradient(145deg,#1e1e1e,#141414);padding:8px 14px;border-radius:12px;font-weight:600;box-shadow:inset 0 0 0 1px #2a2a2a}
 .board{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;background:#0d0d1a;padding:6px;border-radius:18px}
 .col{background:linear-gradient(#161616,#101010);border-radius:16px;min-height:300px;display:flex;flex-direction:column-reverse;padding:5px;cursor:pointer;box-shadow:inset 0 0 0 1px #1f1f1f}
-
 .tile{
   position:relative;height:46px;margin:4px 0;border-radius:14px;
-  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;
+  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;letter-spacing:.4px;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.25),inset 0 -2px 6px rgba(0,0,0,.35),0 6px 14px rgba(0,0,0,.45);
-  transition:.2s;
+  transition:0.2s all;
 }
-
-.tile.glow{box-shadow:0 0 15px 5px gold}
+.tile.glow{box-shadow:0 0 15px 5px gold, inset 0 1px 0 rgba(255,255,255,.25),inset 0 -2px 6px rgba(0,0,0,.35);}
 
 .new{animation:drop .28s cubic-bezier(.18,.89,.32,1.28)}
-@keyframes drop{from{transform:translateY(-22px) scale(.92);opacity:.2}to{opacity:1}}
+@keyframes drop{from{transform:translateY(-22px) scale(.92);opacity:.2}to{transform:none;opacity:1}}
+.merge{animation:merge .25s ease-out;}
+@keyframes merge{0%{transform:scale(1)}50%{transform:scale(1.18)}100%{transform:scale(1)}}
+.spark{position:absolute;width:6px;height:6px;background:gold;border-radius:50%;animation:spark .45s ease-out forwards;}
+@keyframes spark{from{transform:scale(1);opacity:1}to{transform:translate(var(--x),var(--y)) scale(0);opacity:0}}
+.combo{position:fixed;top:30%;font-size:32px;font-weight:900;text-shadow:0 6px 20px #000;animation:combo .8s ease-out forwards;pointer-events:none;}
 
-.merge{animation:merge .25s}
-@keyframes merge{50%{transform:scale(1.18)}}
+.n16{background:linear-gradient(135deg,#55efc4,#00b894)}
+.n32{background:linear-gradient(135deg,#00cec9,#0984e3)}
+.n64{background:linear-gradient(135deg,#74b9ff,#6c5ce7)}
+.n128{background:linear-gradient(135deg,#a29bfe,#6c5ce7)}
+.n256{background:linear-gradient(135deg,#ff7675,#e84393)}
+.n512{background:linear-gradient(135deg,#fab1a0,#e17055)}
+.n1024{background:linear-gradient(135deg,#ffeaa7,#fdcb6e);color:#000}
+.n2048{background:linear-gradient(135deg,#81ecec,#00cec9);color:#000}
+.n4096{background:linear-gradient(135deg,#74b9ff,#0984e3)}
+.n8192,.crown{background:linear-gradient(135deg,#f9ca24,#fff3b0);color:#000;text-shadow:0 1px 0 #fff;box-shadow:0 0 18px rgba(249,202,36,.9),inset 0 1px 0 #fff;}
 
 .controls{margin-top:12px;text-align:center}
 .next{background:linear-gradient(#1e1e1e,#151515);padding:10px;border-radius:14px;margin-bottom:8px;font-size:18px}
-button{width:100%;padding:11px;border:none;border-radius:14px;background:linear-gradient(135deg,#00b894,#019875);color:#fff}
+button{width:100%;padding:11px;margin-top:6px;border:none;border-radius:14px;background:linear-gradient(135deg,#00b894,#019875);color:#fff;font-size:16px}
 
-/* 🔹 Game title – aur upar move kiya */
+/* Celebration & Trophy */
+.celebration{position:fixed;top:35%;font-size:30px;font-weight:900;animation:celebrate 1s ease forwards;}
+@keyframes celebrate{from{opacity:0;transform:scale(.5)}40%{opacity:1;transform:scale(1.2)}to{opacity:0;transform:scale(1.5)}}
+.trophy{position:fixed;top:10%;font-size:36px;animation:trophy 1.2s ease forwards;}
+@keyframes trophy{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:none}}
+
+/* Game title */
 #gameTitle{
-  position:absolute;
-  top:-55px;   /* pehle -30px tha */
-  left:50%;
-  transform:translateX(-50%);
-  font-size:36px;
-  font-weight:900;
+  position:absolute;top:-30px;left:50%;transform:translateX(-50%);
+  font-size:36px;font-weight:900;
   background:linear-gradient(45deg,#f9ca24,#00cec9);
   -webkit-background-clip:text;
   color:transparent;
   text-shadow:0 4px 8px rgba(0,0,0,.6);
 }
+
+/* Medal tracker */
+#medalTracker{position:fixed;top:8px;left:8px;display:flex;gap:6px;z-index:99;}
+.medal{font-size:28px;transition:0.3s;}
 </style>
 </head>
 
 <body>
 <div id="stars"></div>
-
 <div class="game" id="game">
   <div id="gameTitle">Merge 🔢</div>
-
   <div class="top">
     <div class="box">Level: <span id="level">1</span></div>
     <div class="box">Target: <span id="target">128</span></div>
     <div class="box">Score: <span id="score">0</span></div>
   </div>
-
   <div class="board" id="board"></div>
-
   <div class="controls">
     <div class="next">Next: <span id="next">128</span></div>
     <button id="resetBtn">Reset Game</button>
   </div>
 </div>
+<div id="medalTracker"></div>
+
+<audio id="dropSound" src="https://assets.mixkit.co/sfx/preview/mixkit-soft-click-1123.mp3"></audio>
+<audio id="mergeSound" src="https://assets.mixkit.co/sfx/preview/mixkit-magical-coin-win-1936.mp3"></audio>
 
 <script>
+// Stars background
 const starsDiv=document.getElementById("stars");
 for(let i=0;i<120;i++){
-  const s=document.createElement("div");
-  s.className="star";
+  const s=document.createElement("div");s.className="star";
   s.style.top=Math.random()*100+"%";
   s.style.left=Math.random()*100+"%";
   s.style.animationDuration=(5+Math.random()*10)+"s";
   starsDiv.appendChild(s);
 }
+
+// Game variables
+const COLS=5, MAX_HEIGHT=6;
+let board=[],score=0,level=1,nextTile=128;
+const boardDiv=document.getElementById("board");
+const scoreSpan=document.getElementById("score");
+const nextSpan=document.getElementById("next");
+const levelSpan=document.getElementById("level");
+const targetSpan=document.getElementById("target");
+const gameDiv=document.getElementById("game");
+const dropSound=document.getElementById("dropSound");
+const mergeSound=document.getElementById("mergeSound");
+const resetBtn=document.getElementById("resetBtn");
+const medalTracker=document.getElementById("medalTracker");
+
+const levelTargets=[...Array(50)].map((_,i)=>128*Math.pow(2,i));
+const celebrations=[
+"Awesome!","Incredible!","Bravo!","Fantastic!","Outstanding!",
+"Magnificent!","Unstoppable!","Legend Rising!","Power Unlocked!",
+"Victory!","Champion!","Elite!","Masterclass!","Glorious!","Divine Move!"
+];
+const trophies=["🥉","🥈","🥇","💎","👑"];
+
+let earnedMedals=[];
+
+// Save/load
+function save(){localStorage.setItem("mergeNextFX",JSON.stringify({board,score,level,nextTile,earnedMedals}))}
+function load(){
+  const s=localStorage.getItem("mergeNextFX");
+  if(s){
+    const d=JSON.parse(s);
+    board=d.board;score=d.score;level=d.level;nextTile=d.nextTile;
+    earnedMedals=d.earnedMedals||[];
+    updateMedalDisplay();
+  }else board=Array.from({length:COLS},()=>[]);
+}
+
+// Medal display
+function updateMedalDisplay(){
+  medalTracker.innerHTML="";
+  earnedMedals.forEach(m=>{
+    const el=document.createElement("div");el.className="medal";el.textContent=m;
+    medalTracker.appendChild(el);
+  });
+}
+
+function draw(newPos=null, mergedPos=null, mergedValue=0){
+  boardDiv.innerHTML="";
+  board.forEach((col,ci)=>{
+    const c=document.createElement("div");c.className="col";c.onclick=()=>drop(ci);
+    col.forEach((v,ri)=>{
+      const t=document.createElement("div");t.className="tile n"+v;
+      if(newPos && newPos.c===ci && newPos.r===ri) t.classList.add("new");
+      if(mergedPos && mergedPos.c===ci && mergedPos.r===ri){
+        t.classList.add("merge","glow");
+        explode(t,v);
+        comboText(v);
+        if(v>=1024) slowMotionMerge();
+        setTimeout(()=>t.classList.remove("glow"),400);
+      }
+      t.textContent=v>=8192?"👑 "+v:v;
+      c.appendChild(t);
+    });
+    boardDiv.appendChild(c);
+  });
+  scoreSpan.textContent=score;
+  nextSpan.textContent=nextTile;
+  levelSpan.textContent=level;
+  targetSpan.textContent=levelTargets[level-1];
+}
+
+// Effects
+function explode(tile,value){
+  mergeSound.currentTime=0;mergeSound.play();
+  const count=value>=1024?16:value>=512?10:6;
+  for(let i=0;i<count;i++){
+    const p=document.createElement("div");p.className="spark";
+    p.style.setProperty("--x",(Math.random()*80-40)+"px");
+    p.style.setProperty("--y",(Math.random()*80-40)+"px");
+    tile.appendChild(p);setTimeout(()=>p.remove(),450);
+  }
+}
+
+function comboText(value){
+  const d=document.createElement("div");d.className="combo";
+  d.style.fontSize=value>=1024?"48px":"32px";
+  d.textContent=celebrations[Math.floor(Math.random()*celebrations.length)];
+  document.body.appendChild(d);setTimeout(()=>d.remove(),1000);
+}
+
+function screenShake(){gameDiv.classList.add("shake");setTimeout(()=>gameDiv.classList.remove("shake"),150)}
+function trophy(){
+  if(level%3===0){
+    const medal=trophies[Math.floor(level/3-1)]||"🏆";
+    earnedMedals.push(medal);
+    updateMedalDisplay();
+    celebrate();
+  }
+}
+function celebrate(){const d=document.createElement("div");d.className="celebration";d.textContent=celebrations[Math.floor(Math.random()*celebrations.length)];document.body.appendChild(d);setTimeout(()=>d.remove(),1000)}
+function slowMotionMerge(){gameDiv.style.transition="transform .5s";screenShake();setTimeout(()=>{gameDiv.style.transition="transform .15s";},500)}
+
+// Game logic
+function drop(c){
+  if(board[c].length>=MAX_HEIGHT)return;
+  board[c].push(nextTile);
+  let newPos={c:c,r:board[c].length-1},mergedPos=null,mergedValue=0;
+  while(board[c].length>=2){
+    let a=board[c].at(-1),b=board[c].at(-2);
+    if(a===b){
+      board[c].pop();board[c].pop();let nv=a*2;board[c].push(nv);score+=nv;
+      mergedPos={c:c,r:board[c].length-1};mergedValue=nv;
+      if(nv>=levelTargets[level-1]){level++;trophy();}
+    }else break;
+  }
+  const options=[16,32,64,128].filter(x=>x<=levelTargets[level-1]);
+  nextTile=options[Math.floor(Math.random()*options.length)];
+  save();
+  draw(newPos,mergedPos,mergedValue);
+}
+
+// Reset
+resetBtn.onclick=()=>{
+  board=Array.from({length:COLS},()=>[]);
+  score=0; level=1; nextTile=128; earnedMedals=[];
+  updateMedalDisplay();
+  save(); draw();
+}
+
+load();draw();
 </script>
 </body>
 </html>
