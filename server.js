@@ -7,7 +7,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const OPENAI_KEY = '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';
+const OPENAI_KEY = 'xyz';
 
 app.post('/chat', async (req, res) => {
     const { message } = req.body;
