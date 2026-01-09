@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Swipe Drop Merge Fixed</title>
+<title>Swipe Drop Merge Animated</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 body{
@@ -43,7 +43,7 @@ body{
   align-items:center;
   justify-content:center;
   font-weight:800;
-  transition: left 0.15s linear, top 0.15s linear;
+  transition: left 0.25s linear, top 0.25s linear, transform 0.5s ease;
   z-index:10;
 }
 .n16{background:#00b894}
@@ -52,7 +52,8 @@ body{
 .n128{background:#a29bfe}
 .n256{background:#e84393}
 .merge{
-  transition: transform 0.5s ease-in-out;
+  box-shadow: 0 0 15px 5px gold;
+  transform: scale(1.2);
 }
 </style>
 </head>
@@ -71,8 +72,9 @@ let activeTile=null;
 let activeCol=Math.floor(COLS/2);
 let fallInterval=null;
 let tileCounter=0;
+const tilesDivs={};
 
-/* Draw board cells (fixed grid) */
+/* Draw board cells */
 function drawBoard(){
   boardDiv.innerHTML="";
   for(let r=0;r<ROWS;r++){
@@ -94,7 +96,7 @@ function spawnTile(){
   startFall();
 }
 
-/* Render active tile above the board */
+/* Render active tile */
 function renderActive(){
   let t=document.getElementById("activeTile");
   if(!t){
@@ -132,48 +134,72 @@ function placeTile(){
   clearInterval(fallInterval);
   board[activeTile.row][activeTile.col]=activeTile.value;
 
-  // Create permanent tile div
   const rect=boardDiv.getBoundingClientRect();
   const t=document.createElement("div");
   t.className="tile n"+activeTile.value;
   t.textContent=activeTile.value;
   t.style.left=rect.left + activeTile.col*56+"px";
   t.style.top=rect.top + activeTile.row*56+"px";
+  t.dataset.id=activeTile.id;
   boardDiv.appendChild(t);
+  tilesDivs[activeTile.id]=t;
 
   document.getElementById("activeTile").remove();
   activeTile=null;
 
-  mergeAll();
+  mergeAllAnimated();
   drawBoard();
   setTimeout(spawnTile,300);
 }
 
-/* Merge logic */
-function mergeAll(){
+/* Merge with animation */
+function mergeAllAnimated(){
   let merged=false;
   for(let r=0;r<ROWS;r++){
     for(let c=0;c<COLS;c++){
       const val=board[r][c];
       if(!val) continue;
-      // Check right
+      // Horizontal merge
       if(c+1<COLS && board[r][c+1]===val){
         board[r][c]*=2;
         board[r][c+1]=0;
         merged=true;
+        animateMerge(r,c,r,c+1);
       }
-      // Check down
+      // Vertical merge
       if(r+1<ROWS && board[r+1][c]===val){
         board[r][c]*=2;
         board[r+1][c]=0;
         merged=true;
+        animateMerge(r,c,r+1,c);
       }
     }
   }
   if(merged){
     drawBoard();
-    setTimeout(mergeAll,400); // slow motion
+    setTimeout(mergeAllAnimated,500);
   }
+}
+
+/* Animate merge: from tile at (fromRow,fromCol) to (toRow,toCol) */
+function animateMerge(toR,toC,fromR,fromC){
+  const rect=boardDiv.getBoundingClientRect();
+  const tiles=boardDiv.querySelectorAll(".tile");
+  const fromTile = Array.from(tiles).find(t=>{
+    const left=parseInt(t.style.left)-rect.left;
+    const top=parseInt(t.style.top)-rect.top;
+    return Math.abs(top-fromR*56)<5 && Math.abs(left-fromC*56)<5;
+  });
+  const toTile = Array.from(tiles).find(t=>{
+    const left=parseInt(t.style.left)-rect.left;
+    const top=parseInt(t.style.top)-rect.top;
+    return Math.abs(top-toR*56)<5 && Math.abs(left-toC*56)<5;
+  });
+  if(!fromTile || !toTile) return;
+  fromTile.style.left = rect.left + toC*56 + "px";
+  fromTile.style.top = rect.top + toR*56 + "px";
+  fromTile.classList.add("merge");
+  setTimeout(()=>{ fromTile.remove(); drawBoard(); },500);
 }
 
 /* Swipe / Arrow control */
