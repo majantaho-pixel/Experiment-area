@@ -1,76 +1,13 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>AI Voice Assistant</title>
-</head>
-<body>
-<h1>🤖 AI Voice Assistant</h1>
-<button id="startBtn">🎤 Start Listening</button>
-<p id="output">Your command will appear here...</p>
-
-<script>
-const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-recognition.lang = 'en-US';
-recognition.interimResults = false;
-
-const output = document.getElementById('output');
-const startBtn = document.getElementById('startBtn');
-
-// Function to speak text
-function speak(text) {
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 1; // speed
-    utterance.pitch = 1; // pitch
-    window.speechSynthesis.speak(utterance);
-}
-
-// Function to call OpenAI API
 async function getAIResponse(question) {
-    const apiKey = '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';
     try {
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        const response = await fetch('http://localhost:3000/chat', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`
-            },
-            body: JSON.stringify({
-                model: "gpt-3.5-turbo",
-                messages: [{role: "user", content: question}]
-            })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: question })
         });
         const data = await response.json();
-        return data.choices[0].message.content;
+        return data.answer;
     } catch (err) {
-        console.error(err);
         return "Sorry, I cannot answer right now.";
     }
 }
-
-// Start listening on button click
-startBtn.addEventListener('click', () => {
-    recognition.start();
-    output.textContent = "Listening...";
-});
-
-// When speech is recognized
-recognition.onresult = async (event) => {
-    const command = event.results[0][0].transcript;
-    output.textContent = `You said: ${command}`;
-
-    // Get AI response
-    const answer = await getAIResponse(command);
-    output.textContent += `\nAI: ${answer}`;
-
-    // Speak the AI answer
-    speak(answer);
-};
-
-// Handle errors
-recognition.onerror = (event) => {
-    output.textContent = `Error: ${event.error}`;
-};
-</script>
-</body>
-</html>
