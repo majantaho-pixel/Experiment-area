@@ -1,55 +1,58 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ur">
 <head>
 <meta charset="UTF-8">
-<title>Merge 🔢 – Next FX Arcade Ultimate</title>
+<title>Merge 🔢 Fun Edition</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-:root{--radius:14px;}
 body{
   margin:0;
-  background:radial-gradient(circle at top,#0c0c20,#05050a);
-  font-family:system-ui,Segoe UI,Arial;
+  background:#0b0f1a;
+  font-family:system-ui;
   color:#fff;
   display:flex;
   justify-content:center;
   align-items:center;
   height:100vh;
-  overflow:hidden;
 }
-.star{position:absolute;width:2px;height:2px;background:#fff;border-radius:50%;animation:stars linear infinite;}
-@keyframes stars{from{transform:translateY(0)}to{transform:translateY(-1000px)}}
-.game{width:360px;position:relative}
+.game{width:360px}
 .top{display:flex;justify-content:space-between;margin-bottom:10px}
-.box{background:#161616;padding:8px 12px;border-radius:12px;font-weight:600}
-.board{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;background:#0d0d1a;padding:6px;border-radius:18px}
-.col{background:#121212;border-radius:16px;display:flex;flex-direction:column-reverse;padding:5px;cursor:pointer}
-.tile{
-  height:46px;margin:4px 0;border-radius:14px;
-  display:flex;align-items:center;justify-content:center;
-  font-weight:800;font-size:16px;
+.box{background:#151a2c;padding:8px 12px;border-radius:10px}
+.board{
+  display:grid;
+  grid-template-columns:repeat(6,1fr);
+  gap:6px;
+  background:#0f1322;
+  padding:8px;
+  border-radius:16px;
 }
-.n16{background:#00b894}.n32{background:#0984e3}
-.n64{background:#6c5ce7}.n128{background:#a29bfe}
-.n256{background:#e84393}.n512{background:#e17055}
-.n1024{background:#fdcb6e;color:#000}
-.n2048{background:#00cec9;color:#000}
-.n4096{background:#74b9ff}
-.n8192{background:#f9ca24;color:#000}
+.cell{
+  height:48px;
+  border-radius:12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:800;
+  font-size:16px;
+  transition:.2s;
+}
+.empty{background:#1a1f36}
+.n16{background:#00b894}
+.n32{background:#0984e3}
+.n64{background:#6c5ce7}
+.n128{background:#a29bfe}
+.merge{transform:scale(1.2)}
 .controls{margin-top:10px;text-align:center}
-button{width:100%;padding:10px;border-radius:12px;border:none;background:#00b894;color:#fff;font-size:16px}
-#medalTracker{position:fixed;top:8px;left:8px;display:flex;gap:6px;font-size:26px}
+button{width:100%;padding:10px;border:none;border-radius:10px;background:#00b894;color:#fff;font-size:16px}
+#medals{display:flex;gap:6px;margin-top:6px;font-size:22px}
 </style>
 </head>
 
 <body>
 
-<div id="stars"></div>
-
 <div class="game">
   <div class="top">
     <div class="box">Level <span id="level">1</span></div>
-    <div class="box">Target <span id="target">128</span></div>
     <div class="box">Score <span id="score">0</span></div>
   </div>
 
@@ -57,149 +60,98 @@ button{width:100%;padding:10px;border-radius:12px;border:none;background:#00b894
 
   <div class="controls">
     <div class="box">Next: <span id="next">16</span></div>
-    <button onclick="resetGame()">Reset Game</button>
+    <button onclick="reset()">Reset</button>
+    <div id="medals"></div>
   </div>
 </div>
 
-<div id="medalTracker"></div>
-
 <script>
-/* Stars */
-const stars=document.getElementById("stars");
-for(let i=0;i<120;i++){
-  const s=document.createElement("div");
-  s.className="star";
-  s.style.left=Math.random()*100+"%";
-  s.style.top=Math.random()*100+"%";
-  s.style.animationDuration=5+Math.random()*10+"s";
-  stars.appendChild(s);
-}
-
-/* Game Data */
-const COLS=5;
-let MAX_HEIGHT=6;
-let board=Array.from({length:COLS},()=>[]);
-let score=0, level=1;
+const ROWS=7, COLS=6;
+let board=[], score=0, level=1;
 let nextTile=16;
-
-const levelTargets=[...Array(30)].map((_,i)=>128*Math.pow(2,i));
-const trophies=["🥉","🥈","🥇","💎","👑"];
+const medals=["🥉","🥈","🥇","💎","👑"];
 
 const boardDiv=document.getElementById("board");
 const scoreSpan=document.getElementById("score");
 const levelSpan=document.getElementById("level");
-const targetSpan=document.getElementById("target");
 const nextSpan=document.getElementById("next");
-const medalTracker=document.getElementById("medalTracker");
+const medalsDiv=document.getElementById("medals");
 
-/* Space grows naturally */
-function updateBoardSpace(){
-  MAX_HEIGHT = Math.min(6 + Math.floor((level-1)/2), 10);
+function init(){
+  board=[];
+  for(let r=0;r<ROWS;r++){
+    board[r]=Array(COLS).fill(0);
+  }
+
+  // starter tiles
+  for(let i=0;i<10;i++){
+    let r=Math.floor(Math.random()*ROWS);
+    let c=Math.floor(Math.random()*COLS);
+    board[r][c]=Math.random()<0.7?16:32;
+  }
+  draw();
 }
 
-/* Reward EVERY level */
-function reward(){
-  const medal=trophies[Math.min(level-1,trophies.length-1)] || "🏆";
-  medalTracker.innerHTML+=`<div>${medal}</div>`;
-  clearLowestColumn();
-}
-
-/* Emergency space relief */
-function clearLowestColumn(){
-  let col=board.reduce((a,b)=>a.length<b.length?a:b);
-  if(col.length) col.shift();
-}
-
-/* Draw */
 function draw(){
   boardDiv.innerHTML="";
-  board.forEach((col,c)=>{
-    const d=document.createElement("div");
-    d.className="col";
-    d.onclick=()=>drop(c);
-    col.forEach(v=>{
-      const t=document.createElement("div");
-      t.className="tile n"+v;
-      t.textContent=v;
-      d.appendChild(t);
+  board.forEach((row,r)=>{
+    row.forEach((v,c)=>{
+      const d=document.createElement("div");
+      d.className="cell "+(v?("n"+v):"empty");
+      d.textContent=v||"";
+      d.onclick=()=>drop(r,c);
+      boardDiv.appendChild(d);
     });
-    boardDiv.appendChild(d);
   });
   scoreSpan.textContent=score;
   levelSpan.textContent=level;
-  targetSpan.textContent=levelTargets[level-1];
   nextSpan.textContent=nextTile;
 }
 
-/* Smart next tile */
-function getNextTile(){
-  const r=Math.random();
-  if(r<0.55)return 16;
-  if(r<0.8)return 32;
-  if(r<0.93)return 64;
-  return 128;
+function drop(r,c){
+  if(board[r][c]!==0) return;
+  board[r][c]=nextTile;
+  mergeAll();
+  nextTile=Math.random()<0.6?16:32;
+  draw();
 }
 
-/* Auto merge vertical + horizontal */
-function autoMerge(){
+function mergeAll(){
   let merged=false;
-  for(let r=0;r<MAX_HEIGHT;r++){
+  for(let r=0;r<ROWS;r++){
     for(let c=0;c<COLS;c++){
-      if(!board[c][r]) continue;
-      let v=board[c][r];
+      let v=board[r][c];
+      if(!v) continue;
 
-      if(board[c][r+1]===v){
-        board[c][r]=v*2;
-        board[c].splice(r+1,1);
-        score+=v*2;
+      if(c+1<COLS && board[r][c+1]===v){
+        board[r][c]*=2;
+        board[r][c+1]=0;
+        score+=board[r][c];
         merged=true;
       }
 
-      if(c<COLS-1 && board[c+1][r]===v){
-        board[c][r]=v*2;
-        board[c+1].splice(r,1);
-        score+=v*2;
+      if(r+1<ROWS && board[r+1][c]===v){
+        board[r][c]*=2;
+        board[r+1][c]=0;
+        score+=board[r][c];
         merged=true;
       }
     }
   }
-  if(merged) setTimeout(autoMerge,120);
-}
-
-/* Drop tile */
-function drop(c){
-  if(board[c].length>=MAX_HEIGHT) return;
-  board[c].push(nextTile);
-
-  while(board[c].length>=2){
-    let a=board[c].at(-1), b=board[c].at(-2);
-    if(a===b){
-      board[c].pop(); board[c].pop();
-      let nv=a*2;
-      board[c].push(nv);
-      score+=nv;
-      if(nv>=levelTargets[level-1]){
-        level++;
-        updateBoardSpace();
-        reward();
-      }
-    } else break;
+  if(merged){
+    level++;
+    medalsDiv.innerHTML+=`<div>${medals[Math.min(level-1,4)]}</div>`;
+    setTimeout(mergeAll,150);
   }
-
-  nextTile=getNextTile();
-  autoMerge();
-  draw();
 }
 
-/* Reset */
-function resetGame(){
-  board=Array.from({length:COLS},()=>[]);
-  score=0;level=1;MAX_HEIGHT=6;nextTile=16;
-  medalTracker.innerHTML="";
-  draw();
+function reset(){
+  score=0;level=1;
+  medalsDiv.innerHTML="";
+  init();
 }
 
-draw();
+init();
 </script>
 
 </body>
