@@ -1,226 +1,56 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Swipe Drop Merge Animated</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<style>
-body{
-  margin:0;
-  background:#0b1020;
-  font-family:system-ui;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  height:100vh;
-  color:#fff;
-}
-.game{position:relative;width:360px;}
-.board{
-  display:grid;
-  grid-template-columns:repeat(6,1fr);
-  grid-template-rows:repeat(7,50px);
-  gap:6px;
-  background:#111634;
-  padding:8px;
-  border-radius:16px;
-  position:relative;
-}
-.cell{
-  background:#1a1f40;
-  border-radius:12px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:800;
-  font-size:16px;
-}
-.tile{
-  position:absolute;
-  width:50px;height:50px;
-  border-radius:12px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:800;
-  transition: left 0.25s linear, top 0.25s linear, transform 0.5s ease;
-  z-index:10;
-}
-.n16{background:#00b894}
-.n32{background:#0984e3}
-.n64{background:#6c5ce7}
-.n128{background:#a29bfe}
-.n256{background:#e84393}
-.merge{
-  box-shadow: 0 0 15px 5px gold;
-  transform: scale(1.2);
-}
-</style>
+    <meta charset="UTF-8">
+    <title>Voice Assistant</title>
 </head>
 <body>
-<div class="game">
-  <div class="board" id="board"></div>
-</div>
+    <h1>🗣️ Voice Assistant</h1>
+    <button id="startBtn">Start Listening</button>
+    <p id="output">Your command will appear here...</p>
 
-<script>
-const ROWS=7, COLS=6;
-const board=[];
-const boardDiv=document.getElementById("board");
-for(let r=0;r<ROWS;r++) board[r]=Array(COLS).fill(0);
+    <script>
+        // Check for browser support
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'en-US';
+        recognition.interimResults = false;
 
-let activeTile=null;
-let activeCol=Math.floor(COLS/2);
-let fallInterval=null;
-let tileCounter=0;
-const tilesDivs={};
+        const output = document.getElementById('output');
+        const startBtn = document.getElementById('startBtn');
 
-/* Draw board cells */
-function drawBoard(){
-  boardDiv.innerHTML="";
-  for(let r=0;r<ROWS;r++){
-    for(let c=0;c<COLS;c++){
-      const cell=document.createElement("div");
-      cell.className="cell";
-      cell.textContent=board[r][c]?board[r][c]:"";
-      if(board[r][c]) cell.classList.add("n"+board[r][c]);
-      boardDiv.appendChild(cell);
-    }
-  }
-}
+        // Function to speak text
+        function speak(text) {
+            const synth = window.speechSynthesis;
+            const utterance = new SpeechSynthesisUtterance(text);
+            synth.speak(utterance);
+        }
 
-/* Spawn a new tile */
-function spawnTile(){
-  activeCol=Math.floor(COLS/2);
-  activeTile={value:Math.random()<0.7?16:32,row:0,col:activeCol,id:++tileCounter};
-  renderActive();
-  startFall();
-}
+        // Start listening on button click
+        startBtn.addEventListener('click', () => {
+            recognition.start();
+            output.textContent = "Listening...";
+        });
 
-/* Render active tile */
-function renderActive(){
-  let t=document.getElementById("activeTile");
-  if(!t){
-    t=document.createElement("div");
-    t.id="activeTile";
-    t.className="tile n"+activeTile.value;
-    t.textContent=activeTile.value;
-    t.dataset.id=activeTile.id;
-    document.body.appendChild(t);
-  } else {
-    t.className="tile n"+activeTile.value;
-    t.textContent=activeTile.value;
-    t.dataset.id=activeTile.id;
-  }
-  const rect=boardDiv.getBoundingClientRect();
-  t.style.left=rect.left+activeTile.col*56+"px";
-  t.style.top=rect.top + activeTile.row*56 + "px";
-}
+        recognition.onresult = (event) => {
+            const command = event.results[0][0].transcript.toLowerCase();
+            output.textContent = `You said: ${command}`;
 
-/* Continuous fall */
-function startFall(){
-  if(fallInterval) clearInterval(fallInterval);
-  fallInterval=setInterval(()=>{
-    if(activeTile.row+1<ROWS && board[activeTile.row+1][activeTile.col]===0){
-      activeTile.row++;
-      renderActive();
-    } else {
-      placeTile();
-    }
-  },200);
-}
+            // Simple commands
+            if(command.includes('hello')) {
+                speak("Hello! How are you?");
+            } else if(command.includes('your name')) {
+                speak("I am your voice assistant.");
+            } else if(command.includes('stop') || command.includes('exit')) {
+                speak("Goodbye!");
+            } else {
+                speak(`You said ${command}`);
+            }
+        }
 
-/* Place tile permanently */
-function placeTile(){
-  clearInterval(fallInterval);
-  board[activeTile.row][activeTile.col]=activeTile.value;
-
-  const rect=boardDiv.getBoundingClientRect();
-  const t=document.createElement("div");
-  t.className="tile n"+activeTile.value;
-  t.textContent=activeTile.value;
-  t.style.left=rect.left + activeTile.col*56+"px";
-  t.style.top=rect.top + activeTile.row*56+"px";
-  t.dataset.id=activeTile.id;
-  boardDiv.appendChild(t);
-  tilesDivs[activeTile.id]=t;
-
-  document.getElementById("activeTile").remove();
-  activeTile=null;
-
-  mergeAllAnimated();
-  drawBoard();
-  setTimeout(spawnTile,300);
-}
-
-/* Merge with animation */
-function mergeAllAnimated(){
-  let merged=false;
-  for(let r=0;r<ROWS;r++){
-    for(let c=0;c<COLS;c++){
-      const val=board[r][c];
-      if(!val) continue;
-      // Horizontal merge
-      if(c+1<COLS && board[r][c+1]===val){
-        board[r][c]*=2;
-        board[r][c+1]=0;
-        merged=true;
-        animateMerge(r,c,r,c+1);
-      }
-      // Vertical merge
-      if(r+1<ROWS && board[r+1][c]===val){
-        board[r][c]*=2;
-        board[r+1][c]=0;
-        merged=true;
-        animateMerge(r,c,r+1,c);
-      }
-    }
-  }
-  if(merged){
-    drawBoard();
-    setTimeout(mergeAllAnimated,500);
-  }
-}
-
-/* Animate merge: from tile at (fromRow,fromCol) to (toRow,toCol) */
-function animateMerge(toR,toC,fromR,fromC){
-  const rect=boardDiv.getBoundingClientRect();
-  const tiles=boardDiv.querySelectorAll(".tile");
-  const fromTile = Array.from(tiles).find(t=>{
-    const left=parseInt(t.style.left)-rect.left;
-    const top=parseInt(t.style.top)-rect.top;
-    return Math.abs(top-fromR*56)<5 && Math.abs(left-fromC*56)<5;
-  });
-  const toTile = Array.from(tiles).find(t=>{
-    const left=parseInt(t.style.left)-rect.left;
-    const top=parseInt(t.style.top)-rect.top;
-    return Math.abs(top-toR*56)<5 && Math.abs(left-toC*56)<5;
-  });
-  if(!fromTile || !toTile) return;
-  fromTile.style.left = rect.left + toC*56 + "px";
-  fromTile.style.top = rect.top + toR*56 + "px";
-  fromTile.classList.add("merge");
-  setTimeout(()=>{ fromTile.remove(); drawBoard(); },500);
-}
-
-/* Swipe / Arrow control */
-let startX=0;
-document.addEventListener("touchstart",e=>{ if(activeTile) startX=e.touches[0].clientX; });
-document.addEventListener("touchmove",e=>{
-  if(!activeTile) return;
-  const dx=e.touches[0].clientX-startX;
-  if(dx>40 && activeTile.col<COLS-1){ activeTile.col++; startX=e.touches[0].clientX; renderActive(); }
-  if(dx<-40 && activeTile.col>0){ activeTile.col--; startX=e.touches[0].clientX; renderActive(); }
-});
-document.addEventListener("keydown",e=>{
-  if(!activeTile) return;
-  if(e.key==="ArrowLeft" && activeTile.col>0){ activeTile.col--; renderActive(); }
-  if(e.key==="ArrowRight" && activeTile.col<COLS-1){ activeTile.col++; renderActive(); }
-  if(e.key==="ArrowDown"){ startFall(); }
-});
-
-/* Init */
-drawBoard();
-spawnTile();
-</script>
+        recognition.onerror = (event) => {
+            output.textContent = `Error: ${event.error}`;
+        }
+    </script>
 </body>
 </html>
