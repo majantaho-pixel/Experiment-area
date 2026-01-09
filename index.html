@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Swipe Drop Merge Prototype</title>
+<title>Swipe Drop Merge Prototype v2</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 body{
@@ -42,7 +42,7 @@ body{
   align-items:center;
   justify-content:center;
   font-weight:800;
-  transition:0.15s linear;
+  transition: left 0.15s linear, top 0.15s linear;
   z-index:10;
 }
 .n16{background:#00b894}
@@ -51,7 +51,7 @@ body{
 .n128{background:#a29bfe}
 .n256{background:#e84393}
 .merge{
-  transition: transform 0.4s ease-in-out;
+  transition: transform 0.5s ease-in-out;
 }
 </style>
 </head>
@@ -64,10 +64,7 @@ body{
 const ROWS=7, COLS=6;
 const board=[];
 const boardDiv=document.getElementById("board");
-
-for(let r=0;r<ROWS;r++){
-  board[r]=Array(COLS).fill(0);
-}
+for(let r=0;r<ROWS;r++) board[r]=Array(COLS).fill(0);
 
 let activeTile=null;
 let activeCol=Math.floor(COLS/2);
@@ -90,7 +87,7 @@ function drawBoard(){
 /* Spawn new tile */
 function spawnTile(){
   activeCol=Math.floor(COLS/2);
-  activeTile={value:Math.random()<0.7?16:32, row:0, col:activeCol};
+  activeTile={value:Math.random()<0.7?16:32,row:0,col:activeCol};
   renderActive();
   startFall();
 }
@@ -104,13 +101,16 @@ function renderActive(){
     t.className="tile n"+activeTile.value;
     t.textContent=activeTile.value;
     document.body.appendChild(t);
+  } else {
+    t.className="tile n"+activeTile.value;
+    t.textContent=activeTile.value;
   }
   const rect=boardDiv.getBoundingClientRect();
   t.style.left=rect.left+activeTile.col*56+"px";
   t.style.top=rect.top + activeTile.row*56 + "px";
 }
 
-/* Drop logic */
+/* Continuous fall */
 function startFall(){
   if(fallInterval) clearInterval(fallInterval);
   fallInterval=setInterval(()=>{
@@ -123,28 +123,22 @@ function startFall(){
   },200);
 }
 
-/* Place tile in board */
+/* Place tile in board properly */
 function placeTile(){
   clearInterval(fallInterval);
   board[activeTile.row][activeTile.col]=activeTile.value;
+  mergeCheck(activeTile.row,activeTile.col);
+  drawBoard();
   document.getElementById("activeTile").remove();
   activeTile=null;
-  mergeCheck(activeTileRowCol(activeTile.row,activeTile.col));
-  drawBoard();
-  setTimeout(spawnTile,100);
+  setTimeout(spawnTile,200);
 }
 
-/* Helper */
-function activeTileRowCol(r,c){ return {row:r,col:c}; }
-
 /* Merge logic with slow animation */
-function mergeCheck(pos){
-  if(!pos) return;
-  let r=pos.row, c=pos.col;
+function mergeCheck(r,c){
   const val=board[r][c];
   if(!val) return;
   let merged=false;
-
   const dirs=[[0,1],[1,0],[0,-1],[-1,0]];
   dirs.forEach(d=>{
     const nr=r+d[0], nc=c+d[1];
@@ -152,22 +146,18 @@ function mergeCheck(pos){
       board[r][c]=val*2;
       board[nr][nc]=0;
       merged=true;
-      // show slow animation
+      drawBoard();
       const idx=nr*COLS+nc;
       const cell=boardDiv.children[idx];
       cell.classList.add("merge");
-      setTimeout(()=>drawBoard(),400);
+      setTimeout(()=>mergeCheck(r,c),500);
     }
   });
-
-  if(merged){
-    setTimeout(()=>mergeCheck({row:r,col:c}),450);
-  }
 }
 
-/* Swipe / arrow control */
+/* Swipe / Arrow control */
 let startX=0;
-document.addEventListener("touchstart",e=>{ startX=e.touches[0].clientX; });
+document.addEventListener("touchstart",e=>{ if(activeTile) startX=e.touches[0].clientX; });
 document.addEventListener("touchmove",e=>{
   if(!activeTile) return;
   const dx=e.touches[0].clientX-startX;
