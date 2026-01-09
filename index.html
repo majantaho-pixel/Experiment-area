@@ -2,259 +2,257 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Screenshot-Style Ludo</title>
+<title>Merge 🔢 – Next FX Arcade Ultimate</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
+:root{--radius:14px;}
 body{
   margin:0;
-  font-family:Arial,sans-serif;
-  background:#0b1220;
+  background:radial-gradient(circle at top,#0c0c20,#05050a);
+  font-family:system-ui,Segoe UI,Arial;
   color:#fff;
-  text-align:center;
-}
-header{
-  padding:10px;
-  font-size:20px;
-  font-weight:bold;
-  background:rgba(0,0,0,0.5);
-}
-
-/* BOARD */
-#board{
-  width:450px;
-  height:450px;
-  margin:10px auto;
-  display:grid;
-  grid-template-columns:repeat(15,1fr);
-  grid-template-rows:repeat(15,1fr);
-  border:4px solid gold;
-  background:#111827;
-  box-shadow:0 0 20px gold;
-}
-.cell{
-  border:1px solid rgba(255,255,255,.1);
-  position:relative;
-}
-.safe{
-  background:rgba(255,255,255,.15);
-}
-
-/* CENTER */
-.center{
-  grid-column:7/10;
-  grid-row:7/10;
-  background:linear-gradient(45deg,red,green,yellow,blue);
   display:flex;
-  align-items:center;
   justify-content:center;
-  font-weight:bold;
-  border-radius:10px;
+  align-items:center;
+  height:100vh;
+  overflow:hidden;
 }
 
-/* TOKEN */
-.token{
-  width:16px;
-  height:16px;
-  border-radius:50%;
-  position:absolute;
-  cursor:pointer;
-  margin:2px;
-  box-shadow:0 0 8px #000;
-  transition:.2s;
+/* Background stars */
+@keyframes stars{from{transform:translateY(0)}to{transform:translateY(-1000px)}}
+.star{
+  position:absolute;width:2px;height:2px;background:white;border-radius:50%;
+  animation:stars linear infinite;
 }
-.token:hover{transform:scale(1.2)}
-.red{background:#dc2626}
-.green{background:#16a34a}
-.yellow{background:#facc15}
-.blue{background:#2563eb}
 
-/* PANEL */
-#panel{
-  background:rgba(0,0,0,.5);
-  padding:10px;
-}
-button{
-  padding:10px 18px;
-  font-size:16px;
-  border:none;
-  border-radius:6px;
-  background:#2563eb;
-  color:#fff;
-  cursor:pointer;
-}
-button:active{transform:scale(.95)}
-#dice{
-  font-size:32px;
-  margin:5px;
-  animation:none;
-}
-.roll{
-  animation:shake .6s;
-}
+.game{width:360px;transition:transform .15s;position:relative;}
+.shake{animation:shake .15s}
 @keyframes shake{
-  0%{transform:rotate(0)}
-  25%{transform:rotate(20deg)}
-  50%{transform:rotate(-20deg)}
-  75%{transform:rotate(20deg)}
-  100%{transform:rotate(0)}
+  0%{transform:translate(0)}
+  25%{transform:translate(-4px,2px)}
+  50%{transform:translate(4px,-2px)}
+  75%{transform:translate(-3px,1px)}
+  100%{transform:translate(0)}
 }
+
+.top{display:flex;justify-content:space-between;margin-bottom:10px;align-items:center;}
+.box{background:linear-gradient(145deg,#1e1e1e,#141414);padding:8px 14px;border-radius:12px;font-weight:600;box-shadow:inset 0 0 0 1px #2a2a2a}
+.board{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;background:#0d0d1a;padding:6px;border-radius:18px}
+.col{background:linear-gradient(#161616,#101010);border-radius:16px;min-height:300px;display:flex;flex-direction:column-reverse;padding:5px;cursor:pointer;box-shadow:inset 0 0 0 1px #1f1f1f}
+.tile{
+  position:relative;height:46px;margin:4px 0;border-radius:14px;
+  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;letter-spacing:.4px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.25),inset 0 -2px 6px rgba(0,0,0,.35),0 6px 14px rgba(0,0,0,.45);
+  transition:0.2s all;
+}
+.tile.glow{box-shadow:0 0 15px 5px gold, inset 0 1px 0 rgba(255,255,255,.25),inset 0 -2px 6px rgba(0,0,0,.35);}
+
+.new{animation:drop .28s cubic-bezier(.18,.89,.32,1.28)}
+@keyframes drop{from{transform:translateY(-22px) scale(.92);opacity:.2}to{transform:none;opacity:1}}
+.merge{animation:merge .25s ease-out;}
+@keyframes merge{0%{transform:scale(1)}50%{transform:scale(1.18)}100%{transform:scale(1)}}
+.spark{position:absolute;width:6px;height:6px;background:gold;border-radius:50%;animation:spark .45s ease-out forwards;}
+@keyframes spark{from{transform:scale(1);opacity:1}to{transform:translate(var(--x),var(--y)) scale(0);opacity:0}}
+.combo{position:fixed;top:30%;font-size:32px;font-weight:900;text-shadow:0 6px 20px #000;animation:combo .8s ease-out forwards;pointer-events:none;}
+
+.n16{background:linear-gradient(135deg,#55efc4,#00b894)}
+.n32{background:linear-gradient(135deg,#00cec9,#0984e3)}
+.n64{background:linear-gradient(135deg,#74b9ff,#6c5ce7)}
+.n128{background:linear-gradient(135deg,#a29bfe,#6c5ce7)}
+.n256{background:linear-gradient(135deg,#ff7675,#e84393)}
+.n512{background:linear-gradient(135deg,#fab1a0,#e17055)}
+.n1024{background:linear-gradient(135deg,#ffeaa7,#fdcb6e);color:#000}
+.n2048{background:linear-gradient(135deg,#81ecec,#00cec9);color:#000}
+.n4096{background:linear-gradient(135deg,#74b9ff,#0984e3)}
+.n8192,.crown{background:linear-gradient(135deg,#f9ca24,#fff3b0);color:#000;text-shadow:0 1px 0 #fff;box-shadow:0 0 18px rgba(249,202,36,.9),inset 0 1px 0 #fff;}
+
+.controls{margin-top:12px;text-align:center}
+.next{background:linear-gradient(#1e1e1e,#151515);padding:10px;border-radius:14px;margin-bottom:8px;font-size:18px}
+button{width:100%;padding:11px;margin-top:6px;border:none;border-radius:14px;background:linear-gradient(135deg,#00b894,#019875);color:#fff;font-size:16px}
+
+/* Celebration & Trophy */
+.celebration{position:fixed;top:35%;font-size:30px;font-weight:900;animation:celebrate 1s ease forwards;}
+@keyframes celebrate{from{opacity:0;transform:scale(.5)}40%{opacity:1;transform:scale(1.2)}to{opacity:0;transform:scale(1.5)}}
+.trophy{position:fixed;top:10%;font-size:36px;animation:trophy 1.2s ease forwards;}
+@keyframes trophy{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:none}}
+
+/* Game title */
+#gameTitle{
+  position:absolute;top:-30px;left:50%;transform:translateX(-50%);
+  font-size:36px;font-weight:900;
+  background:linear-gradient(45deg,#f9ca24,#00cec9);
+  -webkit-background-clip:text;
+  color:transparent;
+  text-shadow:0 4px 8px rgba(0,0,0,.6);
+}
+
+/* Medal tracker */
+#medalTracker{position:fixed;top:8px;left:8px;display:flex;gap:6px;z-index:99;}
+.medal{font-size:28px;transition:0.3s;}
 </style>
 </head>
 
 <body>
-
-<header>🎲 Screenshot-Style Ludo</header>
-
-<div>
-Players:
-<select id="playerCount">
-<option value="2">2 Players</option>
-<option value="3">3 Players</option>
-<option value="4" selected>4 Players</option>
-</select>
-<button onclick="startGame()">Start</button>
+<div id="stars"></div>
+<div class="game" id="game">
+  <div id="gameTitle">Merge 🔢</div>
+  <div class="top">
+    <div class="box">Level: <span id="level">1</span></div>
+    <div class="box">Target: <span id="target">128</span></div>
+    <div class="box">Score: <span id="score">0</span></div>
+  </div>
+  <div class="board" id="board"></div>
+  <div class="controls">
+    <div class="next">Next: <span id="next">128</span></div>
+    <button id="resetBtn">Reset Game</button>
+  </div>
 </div>
+<div id="medalTracker"></div>
 
-<div id="board"></div>
-
-<div id="panel">
-<h3 id="turnInfo"></h3>
-<div id="dice">🎲</div>
-<button onclick="rollDice()">Roll Dice</button>
-<button onclick="resetGame()">Reset</button>
-</div>
-
-<audio id="diceSound">
-  <source src="https://assets.mixkit.co/sfx/preview/mixkit-dice-roll-1992.mp3">
-</audio>
+<audio id="dropSound" src="https://assets.mixkit.co/sfx/preview/mixkit-soft-click-1123.mp3"></audio>
+<audio id="mergeSound" src="https://assets.mixkit.co/sfx/preview/mixkit-magical-coin-win-1936.mp3"></audio>
 
 <script>
-const board=document.getElementById("board");
-
-/* BUILD BOARD */
-for(let i=0;i<225;i++){
-  const c=document.createElement("div");
-  c.className="cell";
-  c.id="c"+i;
-  board.appendChild(c);
+// Stars background
+const starsDiv=document.getElementById("stars");
+for(let i=0;i<120;i++){
+  const s=document.createElement("div");s.className="star";
+  s.style.top=Math.random()*100+"%";
+  s.style.left=Math.random()*100+"%";
+  s.style.animationDuration=(5+Math.random()*10)+"s";
+  starsDiv.appendChild(s);
 }
 
-/* CENTER */
-const center=document.createElement("div");
-center.className="center";
-center.innerText="LUDO";
-board.appendChild(center);
+// Game variables
+const COLS=5, MAX_HEIGHT=6;
+let board=[],score=0,level=1,nextTile=128;
+const boardDiv=document.getElementById("board");
+const scoreSpan=document.getElementById("score");
+const nextSpan=document.getElementById("next");
+const levelSpan=document.getElementById("level");
+const targetSpan=document.getElementById("target");
+const gameDiv=document.getElementById("game");
+const dropSound=document.getElementById("dropSound");
+const mergeSound=document.getElementById("mergeSound");
+const resetBtn=document.getElementById("resetBtn");
+const medalTracker=document.getElementById("medalTracker");
 
-/* SAFE CELLS */
-const safe=[7,37,67,97,127,147,177,207];
-safe.forEach(i=>document.getElementById("c"+i).classList.add("safe"));
-
-/* PATH */
-const path=[7,22,37,52,67,82,97,112,127,
-128,129,130,131,132,
-147,162,177,192,207,
-208,193,178,163,148,133,
-118,103,88,73,58,
-57,56,55,54,53,
-38,23,8
+const levelTargets=[...Array(50)].map((_,i)=>128*Math.pow(2,i));
+const celebrations=[
+"Awesome!","Incredible!","Bravo!","Fantastic!","Outstanding!",
+"Magnificent!","Unstoppable!","Legend Rising!","Power Unlocked!",
+"Victory!","Champion!","Elite!","Masterclass!","Glorious!","Divine Move!"
 ];
+const trophies=["🥉","🥈","🥇","💎","👑"];
 
-const colors=["red","green","yellow","blue"];
-const names=["Red","Green","Yellow","Blue"];
+let earnedMedals=[];
 
-let game;
-
-/* START */
-function startGame(){
-  const count=parseInt(document.getElementById("playerCount").value);
-  game={
-    players:[],
-    turn:0,
-    dice:0,
-    count:count
-  };
-  for(let i=0;i<count;i++){
-    game.players.push({color:colors[i],tokens:[-1,-1,-1,-1]});
-  }
-  save();
-  render();
+// Save/load
+function save(){localStorage.setItem("mergeNextFX",JSON.stringify({board,score,level,nextTile,earnedMedals}))}
+function load(){
+  const s=localStorage.getItem("mergeNextFX");
+  if(s){
+    const d=JSON.parse(s);
+    board=d.board;score=d.score;level=d.level;nextTile=d.nextTile;
+    earnedMedals=d.earnedMedals||[];
+    updateMedalDisplay();
+  }else board=Array.from({length:COLS},()=>[]);
 }
 
-/* SAVE & LOAD */
-function save(){localStorage.setItem("screenshotLudo",JSON.stringify(game));}
-game=JSON.parse(localStorage.getItem("screenshotLudo"));
-if(game) render();
+// Medal display
+function updateMedalDisplay(){
+  medalTracker.innerHTML="";
+  earnedMedals.forEach(m=>{
+    const el=document.createElement("div");el.className="medal";el.textContent=m;
+    medalTracker.appendChild(el);
+  });
+}
 
-/* RENDER */
-function render(){
-  document.querySelectorAll(".token").forEach(t=>t.remove());
-  game.players.forEach((p,pi)=>{
-    p.tokens.forEach((pos,ti)=>{
-      if(pos>=0){
-        const t=document.createElement("div");
-        t.className="token "+p.color;
-        t.onclick=()=>selectToken(pi,ti);
-        document.getElementById("c"+path[pos]).appendChild(t);
+function draw(newPos=null, mergedPos=null, mergedValue=0){
+  boardDiv.innerHTML="";
+  board.forEach((col,ci)=>{
+    const c=document.createElement("div");c.className="col";c.onclick=()=>drop(ci);
+    col.forEach((v,ri)=>{
+      const t=document.createElement("div");t.className="tile n"+v;
+      if(newPos && newPos.c===ci && newPos.r===ri) t.classList.add("new");
+      if(mergedPos && mergedPos.c===ci && mergedPos.r===ri){
+        t.classList.add("merge","glow");
+        explode(t,v);
+        comboText(v);
+        if(v>=1024) slowMotionMerge();
+        setTimeout(()=>t.classList.remove("glow"),400);
       }
+      t.textContent=v>=8192?"👑 "+v:v;
+      c.appendChild(t);
     });
+    boardDiv.appendChild(c);
   });
-  document.getElementById("turnInfo").innerText="Turn: "+names[game.turn];
+  scoreSpan.textContent=score;
+  nextSpan.textContent=nextTile;
+  levelSpan.textContent=level;
+  targetSpan.textContent=levelTargets[level-1];
 }
 
-/* DICE */
-function rollDice(){
-  const d=document.getElementById("dice");
-  d.classList.add("roll");
-  document.getElementById("diceSound").play();
-  setTimeout(()=>{
-    game.dice=Math.floor(Math.random()*6)+1;
-    d.innerText="🎲 "+game.dice;
-    d.classList.remove("roll");
-  },600);
-}
-
-/* TOKEN SELECT */
-function selectToken(playerIndex,tokenIndex){
-  if(playerIndex!==game.turn) return;
-
-  let p=game.players[playerIndex];
-  let pos=p.tokens[tokenIndex];
-
-  // bring out on 6
-  if(pos===-1){
-    if(game.dice===6) p.tokens[tokenIndex]=0;
-    else return;
-  }else{
-    if(pos+game.dice>=path.length) return;
-    p.tokens[tokenIndex]+=game.dice;
+// Effects
+function explode(tile,value){
+  mergeSound.currentTime=0;mergeSound.play();
+  const count=value>=1024?16:value>=512?10:6;
+  for(let i=0;i<count;i++){
+    const p=document.createElement("div");p.className="spark";
+    p.style.setProperty("--x",(Math.random()*80-40)+"px");
+    p.style.setProperty("--y",(Math.random()*80-40)+"px");
+    tile.appendChild(p);setTimeout(()=>p.remove(),450);
   }
+}
 
-  // CUT (not on safe)
-  game.players.forEach((op,oi)=>{
-    if(oi!==playerIndex){
-      op.tokens=op.tokens.map(t=>{
-        if(t===p.tokens[tokenIndex] && !safe.includes(path[t])) return -1;
-        return t;
-      });
-    }
-  });
+function comboText(value){
+  const d=document.createElement("div");d.className="combo";
+  d.style.fontSize=value>=1024?"48px":"32px";
+  d.textContent=celebrations[Math.floor(Math.random()*celebrations.length)];
+  document.body.appendChild(d);setTimeout(()=>d.remove(),1000);
+}
 
-  // NEXT TURN
-  if(game.dice!==6)
-    game.turn=(game.turn+1)%game.count;
+function screenShake(){gameDiv.classList.add("shake");setTimeout(()=>gameDiv.classList.remove("shake"),150)}
+function trophy(){
+  if(level%3===0){
+    const medal=trophies[Math.floor(level/3-1)]||"🏆";
+    earnedMedals.push(medal);
+    updateMedalDisplay();
+    celebrate();
+  }
+}
+function celebrate(){const d=document.createElement("div");d.className="celebration";d.textContent=celebrations[Math.floor(Math.random()*celebrations.length)];document.body.appendChild(d);setTimeout(()=>d.remove(),1000)}
+function slowMotionMerge(){gameDiv.style.transition="transform .5s";screenShake();setTimeout(()=>{gameDiv.style.transition="transform .15s";},500)}
 
+// Game logic
+function drop(c){
+  if(board[c].length>=MAX_HEIGHT)return;
+  board[c].push(nextTile);
+  let newPos={c:c,r:board[c].length-1},mergedPos=null,mergedValue=0;
+  while(board[c].length>=2){
+    let a=board[c].at(-1),b=board[c].at(-2);
+    if(a===b){
+      board[c].pop();board[c].pop();let nv=a*2;board[c].push(nv);score+=nv;
+      mergedPos={c:c,r:board[c].length-1};mergedValue=nv;
+      if(nv>=levelTargets[level-1]){level++;trophy();}
+    }else break;
+  }
+  const options=[16,32,64,128].filter(x=>x<=levelTargets[level-1]);
+  nextTile=options[Math.floor(Math.random()*options.length)];
   save();
-  render();
+  draw(newPos,mergedPos,mergedValue);
 }
 
-/* RESET */
-function resetGame(){
-  localStorage.removeItem("screenshotLudo");
-  location.reload();
+// Reset
+resetBtn.onclick=()=>{
+  board=Array.from({length:COLS},()=>[]);
+  score=0; level=1; nextTile=128; earnedMedals=[];
+  updateMedalDisplay();
+  save(); draw();
 }
 
+load();draw();
 </script>
-
 </body>
 </html>
