@@ -1,56 +1,63 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Voice Assistant</title>
+<meta charset="UTF-8">
+<title>AI Voice Assistant</title>
 </head>
 <body>
-    <h1>🗣️ Voice Assistant</h1>
-    <button id="startBtn">Start Listening</button>
-    <p id="output">Your command will appear here...</p>
+<h1>🤖 AI Voice Assistant</h1>
+<button id="startBtn">Start Listening</button>
+<p id="output">Your command will appear here...</p>
 
-    <script>
-        // Check for browser support
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        const recognition = new SpeechRecognition();
-        recognition.lang = 'en-US';
-        recognition.interimResults = false;
+<script>
+const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+recognition.lang = 'en-US';
+recognition.interimResults = false;
 
-        const output = document.getElementById('output');
-        const startBtn = document.getElementById('startBtn');
+const output = document.getElementById('output');
+const startBtn = document.getElementById('startBtn');
 
-        // Function to speak text
-        function speak(text) {
-            const synth = window.speechSynthesis;
-            const utterance = new SpeechSynthesisUtterance(text);
-            synth.speak(utterance);
-        }
+function speak(text) {
+    const utterance = new SpeechSynthesisUtterance(text);
+    window.speechSynthesis.speak(utterance);
+}
 
-        // Start listening on button click
-        startBtn.addEventListener('click', () => {
-            recognition.start();
-            output.textContent = "Listening...";
-        });
+async function getAIResponse(question) {
+    // OpenAI API call
+    const apiKey = 'YOUR_OPENAI_API_KEY'; // <-- یہاں اپنی API key ڈالیں
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+            model: "gpt-3.5-turbo",
+            messages: [{role: "user", content: question}]
+        })
+    });
+    const data = await response.json();
+    return data.choices[0].message.content;
+}
 
-        recognition.onresult = (event) => {
-            const command = event.results[0][0].transcript.toLowerCase();
-            output.textContent = `You said: ${command}`;
+startBtn.addEventListener('click', () => {
+    recognition.start();
+    output.textContent = "Listening...";
+});
 
-            // Simple commands
-            if(command.includes('hello')) {
-                speak("Hello! How are you?");
-            } else if(command.includes('your name')) {
-                speak("I am your voice assistant.");
-            } else if(command.includes('stop') || command.includes('exit')) {
-                speak("Goodbye!");
-            } else {
-                speak(`You said ${command}`);
-            }
-        }
+recognition.onresult = async (event) => {
+    const command = event.results[0][0].transcript;
+    output.textContent = `You said: ${command}`;
 
-        recognition.onerror = (event) => {
-            output.textContent = `Error: ${event.error}`;
-        }
-    </script>
+    // Get AI response
+    const answer = await getAIResponse(command);
+    output.textContent += `\nAI: ${answer}`;
+    speak(answer);
+};
+
+recognition.onerror = (event) => {
+    output.textContent = `Error: ${event.error}`;
+};
+</script>
 </body>
 </html>
