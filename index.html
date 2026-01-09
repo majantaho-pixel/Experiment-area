@@ -216,7 +216,7 @@ function comboText(value){
 function screenShake(){gameDiv.classList.add("shake");setTimeout(()=>gameDiv.classList.remove("shake"),150)}
 function trophy(){
   if(level%3===0){
-    const medal=trophies[Math.floor(level/2-1)]||"🏆";
+    const medal=trophies[Math.floor(level/3-1)]||"🏆";
     earnedMedals.push(medal);
     updateMedalDisplay();
     celebrate();
