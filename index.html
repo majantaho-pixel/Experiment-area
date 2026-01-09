@@ -13,29 +13,11 @@ body{
   color:#fff;
   text-align:center;
 }
-
-/* HEADER */
 header{
   padding:10px;
-  background:rgba(0,0,0,0.4);
+  background:rgba(0,0,0,.5);
   font-size:20px;
   font-weight:bold;
-}
-
-/* SETUP */
-#setup{
-  margin:15px;
-}
-select,button{
-  padding:8px 12px;
-  font-size:16px;
-  border-radius:6px;
-  border:none;
-}
-button{
-  background:#2563eb;
-  color:#fff;
-  cursor:pointer;
 }
 
 /* BOARD */
@@ -48,35 +30,14 @@ button{
   grid-template-rows:repeat(15,1fr);
   border:4px solid gold;
   background:#0b1220;
+  box-shadow:0 0 20px gold;
 }
-
-/* CELL */
 .cell{
-  border:1px solid rgba(255,255,255,0.1);
+  border:1px solid rgba(255,255,255,.1);
   position:relative;
 }
-
-/* HOME */
-.home{
-  display:flex;
-  flex-wrap:wrap;
-  align-items:center;
-  justify-content:center;
-}
-
-/* COLORS */
-.red{background:#dc2626}
-.green{background:#16a34a}
-.yellow{background:#facc15}
-.blue{background:#2563eb}
-
-/* TOKEN */
-.token{
-  width:16px;
-  height:16px;
-  border-radius:50%;
-  margin:2px;
-  box-shadow:0 0 6px #000;
+.safe{
+  background:rgba(255,255,255,.15);
 }
 
 /* CENTER */
@@ -88,13 +49,56 @@ button{
   align-items:center;
   justify-content:center;
   font-weight:bold;
-  border-radius:8px;
+  border-radius:10px;
 }
+
+/* TOKENS */
+.token{
+  width:16px;
+  height:16px;
+  border-radius:50%;
+  position:absolute;
+  cursor:pointer;
+  transition:.2s;
+  box-shadow:0 0 8px #000;
+}
+.token:hover{transform:scale(1.2)}
+
+.red{background:#dc2626}
+.green{background:#16a34a}
+.yellow{background:#facc15}
+.blue{background:#2563eb}
 
 /* PANEL */
 #panel{
-  background:rgba(0,0,0,0.4);
+  background:rgba(0,0,0,.5);
   padding:10px;
+}
+button{
+  padding:10px 18px;
+  font-size:16px;
+  border:none;
+  border-radius:6px;
+  background:#2563eb;
+  color:#fff;
+  cursor:pointer;
+}
+button:active{transform:scale(.95)}
+
+#dice{
+  font-size:32px;
+  margin:5px;
+  animation:none;
+}
+.roll{
+  animation:shake .6s;
+}
+@keyframes shake{
+  0%{transform:rotate(0)}
+  25%{transform:rotate(20deg)}
+  50%{transform:rotate(-20deg)}
+  75%{transform:rotate(20deg)}
+  100%{transform:rotate(0)}
 }
 </style>
 </head>
@@ -103,29 +107,22 @@ button{
 
 <header>🎲 Premium Ludo</header>
 
-<div id="setup">
-  Players:
-  <select id="playerCount">
-    <option value="2">2 Players</option>
-    <option value="3">3 Players</option>
-    <option value="4" selected>4 Players</option>
-  </select>
-  <button onclick="startGame()">Start</button>
-</div>
-
 <div id="board"></div>
 
 <div id="panel">
   <h3 id="turnInfo"></h3>
-  <h2 id="dice">🎲 0</h2>
+  <div id="dice">🎲</div>
   <button onclick="rollDice()">Roll Dice</button>
   <button onclick="resetGame()">Reset</button>
 </div>
 
-<script>
-const board=document.getElementById("board");
+<audio id="diceSound">
+  <source src="https://assets.mixkit.co/sfx/preview/mixkit-dice-roll-1992.mp3">
+</audio>
 
-/* BUILD BOARD */
+<script>
+/* BOARD BUILD */
+const board=document.getElementById("board");
 for(let i=0;i<225;i++){
   const c=document.createElement("div");
   c.className="cell";
@@ -139,7 +136,11 @@ center.className="center";
 center.innerText="LUDO";
 board.appendChild(center);
 
-/* PATH (simplified real loop) */
+/* SAFE CELLS */
+const safe=[7,37,67,97,127,147,177,207];
+safe.forEach(i=>document.getElementById("c"+i).classList.add("safe"));
+
+/* PATH */
 const path=[
 7,22,37,52,67,82,97,112,127,
 128,129,130,131,132,
@@ -153,46 +154,27 @@ const path=[
 const colors=["red","green","yellow","blue"];
 const names=["Red","Green","Yellow","Blue"];
 
-let game;
+let game = JSON.parse(localStorage.getItem("ludoPro")) || {
+  turn:0,
+  dice:0,
+  players:colors.map(c=>({
+    color:c,
+    tokens:[-1,-1,-1,-1] // -1 = home
+  }))
+};
 
-/* START */
-function startGame(){
-  const count=parseInt(document.getElementById("playerCount").value);
-  game={
-    players:[],
-    turn:0,
-    dice:0,
-    count:count
-  };
-
-  for(let i=0;i<count;i++){
-    game.players.push({
-      color:colors[i],
-      tokens:[0,0,0,0]
-    });
-  }
-  save();
-  render();
-}
-
-/* SAVE */
-function save(){
-  localStorage.setItem("premiumLudo",JSON.stringify(game));
-}
-
-/* LOAD */
-game=JSON.parse(localStorage.getItem("premiumLudo"));
-if(game) render();
+function save(){localStorage.setItem("ludoPro",JSON.stringify(game));}
 
 /* RENDER */
 function render(){
   document.querySelectorAll(".token").forEach(t=>t.remove());
 
   game.players.forEach((p,pi)=>{
-    p.tokens.forEach(pos=>{
-      if(pos<path.length){
+    p.tokens.forEach((pos,ti)=>{
+      if(pos>=0){
         const t=document.createElement("div");
         t.className="token "+p.color;
+        t.onclick=()=>selectToken(pi,ti);
         document.getElementById("c"+path[pos]).appendChild(t);
       }
     });
@@ -200,41 +182,61 @@ function render(){
 
   document.getElementById("turnInfo").innerText=
     "Turn: "+names[game.turn];
-  document.getElementById("dice").innerText="🎲 "+game.dice;
+  save();
 }
 
 /* DICE */
 function rollDice(){
-  game.dice=Math.floor(Math.random()*6)+1;
-  moveToken();
+  const d=document.getElementById("dice");
+  d.classList.add("roll");
+  document.getElementById("diceSound").play();
+  setTimeout(()=>{
+    game.dice=Math.floor(Math.random()*6)+1;
+    d.innerText="🎲 "+game.dice;
+    d.classList.remove("roll");
+  },600);
 }
 
-/* MOVE FIRST AVAILABLE TOKEN */
-function moveToken(){
-  let p=game.players[game.turn];
-  for(let i=0;i<4;i++){
-    if(p.tokens[i]+game.dice<path.length){
-      p.tokens[i]+=game.dice;
+/* TOKEN SELECT */
+function selectToken(playerIndex,tokenIndex){
+  if(playerIndex!==game.turn) return;
 
-      // CUT
-      game.players.forEach((op,oi)=>{
-        if(oi!==game.turn){
-          op.tokens=op.tokens.map(t=>t===p.tokens[i]?0:t);
-        }
-      });
-      break;
-    }
+  let p=game.players[playerIndex];
+  let pos=p.tokens[tokenIndex];
+
+  // bring out only on 6
+  if(pos===-1){
+    if(game.dice===6) p.tokens[tokenIndex]=0;
+    else return;
+  }else{
+    if(pos+game.dice>=path.length) return;
+    p.tokens[tokenIndex]+=game.dice;
   }
-  game.turn=(game.turn+1)%game.count;
-  save();
+
+  // CUT (not on safe)
+  game.players.forEach((op,oi)=>{
+    if(oi!==playerIndex){
+      op.tokens=op.tokens.map(t=>{
+        if(t===p.tokens[tokenIndex] && !safe.includes(path[t])) return -1;
+        return t;
+      });
+    }
+  });
+
+  // NEXT TURN
+  if(game.dice!==6)
+    game.turn=(game.turn+1)%4;
+
   render();
 }
 
 /* RESET */
 function resetGame(){
-  localStorage.removeItem("premiumLudo");
+  localStorage.removeItem("ludoPro");
   location.reload();
 }
+
+render();
 </script>
 
 </body>
