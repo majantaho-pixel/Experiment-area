@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Swipe Drop Merge Prototype v2</title>
+<title>Swipe Drop Merge Fixed</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 body{
@@ -24,6 +24,7 @@ body{
   background:#111634;
   padding:8px;
   border-radius:16px;
+  position:relative;
 }
 .cell{
   background:#1a1f40;
@@ -69,8 +70,9 @@ for(let r=0;r<ROWS;r++) board[r]=Array(COLS).fill(0);
 let activeTile=null;
 let activeCol=Math.floor(COLS/2);
 let fallInterval=null;
+let tileCounter=0;
 
-/* Draw board */
+/* Draw board cells (fixed grid) */
 function drawBoard(){
   boardDiv.innerHTML="";
   for(let r=0;r<ROWS;r++){
@@ -84,15 +86,15 @@ function drawBoard(){
   }
 }
 
-/* Spawn new tile */
+/* Spawn a new tile */
 function spawnTile(){
   activeCol=Math.floor(COLS/2);
-  activeTile={value:Math.random()<0.7?16:32,row:0,col:activeCol};
+  activeTile={value:Math.random()<0.7?16:32,row:0,col:activeCol,id:++tileCounter};
   renderActive();
   startFall();
 }
 
-/* Render active tile */
+/* Render active tile above the board */
 function renderActive(){
   let t=document.getElementById("activeTile");
   if(!t){
@@ -100,10 +102,12 @@ function renderActive(){
     t.id="activeTile";
     t.className="tile n"+activeTile.value;
     t.textContent=activeTile.value;
+    t.dataset.id=activeTile.id;
     document.body.appendChild(t);
   } else {
     t.className="tile n"+activeTile.value;
     t.textContent=activeTile.value;
+    t.dataset.id=activeTile.id;
   }
   const rect=boardDiv.getBoundingClientRect();
   t.style.left=rect.left+activeTile.col*56+"px";
@@ -123,36 +127,53 @@ function startFall(){
   },200);
 }
 
-/* Place tile in board properly */
+/* Place tile permanently */
 function placeTile(){
   clearInterval(fallInterval);
   board[activeTile.row][activeTile.col]=activeTile.value;
-  mergeCheck(activeTile.row,activeTile.col);
-  drawBoard();
+
+  // Create permanent tile div
+  const rect=boardDiv.getBoundingClientRect();
+  const t=document.createElement("div");
+  t.className="tile n"+activeTile.value;
+  t.textContent=activeTile.value;
+  t.style.left=rect.left + activeTile.col*56+"px";
+  t.style.top=rect.top + activeTile.row*56+"px";
+  boardDiv.appendChild(t);
+
   document.getElementById("activeTile").remove();
   activeTile=null;
-  setTimeout(spawnTile,200);
+
+  mergeAll();
+  drawBoard();
+  setTimeout(spawnTile,300);
 }
 
-/* Merge logic with slow animation */
-function mergeCheck(r,c){
-  const val=board[r][c];
-  if(!val) return;
+/* Merge logic */
+function mergeAll(){
   let merged=false;
-  const dirs=[[0,1],[1,0],[0,-1],[-1,0]];
-  dirs.forEach(d=>{
-    const nr=r+d[0], nc=c+d[1];
-    if(board[nr]?.[nc]===val){
-      board[r][c]=val*2;
-      board[nr][nc]=0;
-      merged=true;
-      drawBoard();
-      const idx=nr*COLS+nc;
-      const cell=boardDiv.children[idx];
-      cell.classList.add("merge");
-      setTimeout(()=>mergeCheck(r,c),500);
+  for(let r=0;r<ROWS;r++){
+    for(let c=0;c<COLS;c++){
+      const val=board[r][c];
+      if(!val) continue;
+      // Check right
+      if(c+1<COLS && board[r][c+1]===val){
+        board[r][c]*=2;
+        board[r][c+1]=0;
+        merged=true;
+      }
+      // Check down
+      if(r+1<ROWS && board[r+1][c]===val){
+        board[r][c]*=2;
+        board[r+1][c]=0;
+        merged=true;
+      }
     }
-  });
+  }
+  if(merged){
+    drawBoard();
+    setTimeout(mergeAll,400); // slow motion
+  }
 }
 
 /* Swipe / Arrow control */
