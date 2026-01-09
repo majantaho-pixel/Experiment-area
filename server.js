@@ -26,6 +26,7 @@ app.post('/chat', async (req, res) => {
         const data = await response.json();
         res.json({ answer: data.choices[0].message.content });
     } catch (err) {
+        console.error(err);
         res.json({ answer: "Sorry, I cannot answer right now." });
     }
 });
