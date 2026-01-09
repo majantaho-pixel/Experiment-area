@@ -1,157 +1,178 @@
 <!DOCTYPE html>
-<html lang="ur">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Merge 🔢 Fun Edition</title>
+<title>Swipe Drop Merge</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 body{
   margin:0;
-  background:#0b0f1a;
+  background:#0b1020;
   font-family:system-ui;
-  color:#fff;
   display:flex;
   justify-content:center;
   align-items:center;
   height:100vh;
+  color:#fff;
 }
 .game{width:360px}
-.top{display:flex;justify-content:space-between;margin-bottom:10px}
-.box{background:#151a2c;padding:8px 12px;border-radius:10px}
 .board{
   display:grid;
   grid-template-columns:repeat(6,1fr);
+  grid-template-rows:repeat(7,50px);
   gap:6px;
-  background:#0f1322;
+  background:#111634;
   padding:8px;
   border-radius:16px;
 }
 .cell{
-  height:48px;
+  background:#1a1f40;
   border-radius:12px;
   display:flex;
   align-items:center;
   justify-content:center;
   font-weight:800;
   font-size:16px;
-  transition:.2s;
 }
-.empty{background:#1a1f36}
+.tile{
+  position:absolute;
+  width:50px;height:50px;
+  border-radius:12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:800;
+  transition:.15s;
+}
 .n16{background:#00b894}
 .n32{background:#0984e3}
 .n64{background:#6c5ce7}
-.n128{background:#a29bfe}
-.merge{transform:scale(1.2)}
-.controls{margin-top:10px;text-align:center}
-button{width:100%;padding:10px;border:none;border-radius:10px;background:#00b894;color:#fff;font-size:16px}
-#medals{display:flex;gap:6px;margin-top:6px;font-size:22px}
+.merge{
+  animation:merge .4s ease-in-out;
+}
+@keyframes merge{
+  0%{transform:scale(1)}
+  50%{transform:scale(1.3)}
+  100%{transform:scale(1)}
+}
 </style>
 </head>
 
 <body>
 
 <div class="game">
-  <div class="top">
-    <div class="box">Level <span id="level">1</span></div>
-    <div class="box">Score <span id="score">0</span></div>
-  </div>
-
   <div class="board" id="board"></div>
-
-  <div class="controls">
-    <div class="box">Next: <span id="next">16</span></div>
-    <button onclick="reset()">Reset</button>
-    <div id="medals"></div>
-  </div>
 </div>
 
 <script>
-const ROWS=7, COLS=6;
-let board=[], score=0, level=1;
-let nextTile=16;
-const medals=["🥉","🥈","🥇","💎","👑"];
-
+const COLS=6, ROWS=7;
+const board=[];
 const boardDiv=document.getElementById("board");
-const scoreSpan=document.getElementById("score");
-const levelSpan=document.getElementById("level");
-const nextSpan=document.getElementById("next");
-const medalsDiv=document.getElementById("medals");
 
-function init(){
-  board=[];
-  for(let r=0;r<ROWS;r++){
-    board[r]=Array(COLS).fill(0);
-  }
+let activeTile=null;
+let activeCol=2;
+let dropping=false;
 
-  // starter tiles
-  for(let i=0;i<10;i++){
-    let r=Math.floor(Math.random()*ROWS);
-    let c=Math.floor(Math.random()*COLS);
-    board[r][c]=Math.random()<0.7?16:32;
-  }
-  draw();
+for(let r=0;r<ROWS;r++){
+  board[r]=Array(COLS).fill(0);
 }
 
+/* Draw grid */
 function draw(){
   boardDiv.innerHTML="";
-  board.forEach((row,r)=>{
-    row.forEach((v,c)=>{
-      const d=document.createElement("div");
-      d.className="cell "+(v?("n"+v):"empty");
-      d.textContent=v||"";
-      d.onclick=()=>drop(r,c);
-      boardDiv.appendChild(d);
+  board.forEach(row=>{
+    row.forEach(v=>{
+      const c=document.createElement("div");
+      c.className="cell";
+      c.textContent=v||"";
+      if(v) c.classList.add("n"+v);
+      boardDiv.appendChild(c);
     });
   });
-  scoreSpan.textContent=score;
-  levelSpan.textContent=level;
-  nextSpan.textContent=nextTile;
 }
 
-function drop(r,c){
-  if(board[r][c]!==0) return;
-  board[r][c]=nextTile;
-  mergeAll();
-  nextTile=Math.random()<0.6?16:32;
-  draw();
+/* Spawn falling tile */
+function spawn(){
+  activeCol=Math.floor(COLS/2);
+  activeTile={value:Math.random()<0.7?16:32,row:0,col:activeCol};
+  renderActive();
 }
 
-function mergeAll(){
+/* Render falling tile */
+function renderActive(){
+  let t=document.getElementById("active");
+  if(!t){
+    t=document.createElement("div");
+    t.id="active";
+    t.className="tile n"+activeTile.value;
+    t.textContent=activeTile.value;
+    document.body.appendChild(t);
+  }
+  const rect=boardDiv.getBoundingClientRect();
+  t.style.left=rect.left+activeTile.col*56+"px";
+  t.style.top=rect.top-60+"px";
+}
+
+/* Drop tile */
+function drop(){
+  if(dropping) return;
+  dropping=true;
+  let r=0;
+  while(r+1<ROWS && board[r+1][activeCol]===0) r++;
+  board[r][activeCol]=activeTile.value;
+  document.getElementById("active").remove();
+  activeTile=null;
+  mergeCheck(r,activeCol);
+  setTimeout(()=>{dropping=false;spawn()},500);
+}
+
+/* Merge logic */
+function mergeCheck(r,c){
+  const v=board[r][c];
   let merged=false;
-  for(let r=0;r<ROWS;r++){
-    for(let c=0;c<COLS;c++){
-      let v=board[r][c];
-      if(!v) continue;
 
-      if(c+1<COLS && board[r][c+1]===v){
-        board[r][c]*=2;
-        board[r][c+1]=0;
-        score+=board[r][c];
-        merged=true;
-      }
-
-      if(r+1<ROWS && board[r+1][c]===v){
-        board[r][c]*=2;
-        board[r+1][c]=0;
-        score+=board[r][c];
-        merged=true;
-      }
+  const dirs=[[0,1],[1,0],[0,-1],[-1,0]];
+  dirs.forEach(d=>{
+    const nr=r+d[0], nc=c+d[1];
+    if(board[nr]?.[nc]===v){
+      board[r][c]=v*2;
+      board[nr][nc]=0;
+      merged=true;
     }
-  }
+  });
+
+  draw();
+
   if(merged){
-    level++;
-    medalsDiv.innerHTML+=`<div>${medals[Math.min(level-1,4)]}</div>`;
-    setTimeout(mergeAll,150);
+    const cell=boardDiv.children[r*COLS+c];
+    cell.classList.add("merge");
+    setTimeout(()=>mergeCheck(r,c),400);
   }
 }
 
-function reset(){
-  score=0;level=1;
-  medalsDiv.innerHTML="";
-  init();
-}
+/* Swipe control */
+let startX=0,startY=0;
+document.addEventListener("touchstart",e=>{
+  startX=e.touches[0].clientX;
+  startY=e.touches[0].clientY;
+});
 
-init();
+document.addEventListener("touchend",e=>{
+  const dx=e.changedTouches[0].clientX-startX;
+  const dy=e.changedTouches[0].clientY-startY;
+
+  if(Math.abs(dx)>Math.abs(dy)){
+    if(dx>30 && activeCol<COLS-1) activeCol++;
+    if(dx<-30 && activeCol>0) activeCol--;
+    renderActive();
+  }else{
+    if(dy>30) drop();
+  }
+});
+
+/* Init */
+draw();
+spawn();
 </script>
 
 </body>
