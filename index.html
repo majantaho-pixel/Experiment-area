@@ -2,90 +2,136 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Professional Ludo – Single File</title>
+<title>Yalla Style Ludo</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 body{
   margin:0;
+  background:#0f172a;
   font-family:Arial, sans-serif;
-  background:#1b1b1b;
   color:#fff;
   text-align:center;
 }
-h1{margin:10px 0}
 
+/* HEADER */
+header{
+  background:#020617;
+  padding:10px;
+  font-size:20px;
+  font-weight:bold;
+}
+
+/* BOARD */
 #board{
   width:360px;
   height:360px;
-  margin:10px auto;
+  margin:15px auto;
   display:grid;
-  grid-template-columns:repeat(6,1fr);
-  grid-template-rows:repeat(6,1fr);
-  border:3px solid #fff;
+  grid-template-columns:repeat(15,1fr);
+  grid-template-rows:repeat(15,1fr);
+  border:4px solid #fff;
+  background:#111827;
 }
 
+/* CELLS */
 .cell{
-  border:1px solid #444;
+  border:1px solid #1f2933;
   position:relative;
 }
 
+/* COLORS */
+.red{background:#dc2626}
+.green{background:#16a34a}
+.yellow{background:#facc15}
+.blue{background:#2563eb}
+
+/* HOME AREAS */
+.home{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:bold;
+}
+
+/* TOKEN */
 .token{
-  width:18px;
-  height:18px;
+  width:16px;
+  height:16px;
   border-radius:50%;
   position:absolute;
   top:50%;
   left:50%;
   transform:translate(-50%,-50%);
+  box-shadow:0 0 6px #000;
 }
 
-.red{background:red}
-.green{background:green}
-.yellow{background:yellow}
-.blue{background:blue}
+/* CENTER */
+.center{
+  grid-column:7/10;
+  grid-row:7/10;
+  background:#020617;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:bold;
+  font-size:18px;
+}
 
+/* PANEL */
 #panel{
-  margin-top:10px;
+  background:#020617;
+  padding:10px;
 }
 
 button{
-  padding:10px 20px;
-  font-size:16px;
+  padding:10px 16px;
   margin:5px;
+  font-size:16px;
+  border:none;
+  border-radius:6px;
+  background:#2563eb;
+  color:white;
   cursor:pointer;
 }
+
+button:active{transform:scale(0.96)}
 </style>
 </head>
 
 <body>
 
-<h1>🎲 Professional Ludo</h1>
+<header>🎲 Yalla-Style Ludo</header>
 
 <div id="board"></div>
 
 <div id="panel">
-  <h3 id="turnInfo">Turn: Red</h3>
+  <h3 id="turn">Turn: Red</h3>
   <h2 id="dice">🎲 0</h2>
   <button onclick="rollDice()">Roll Dice</button>
-  <button onclick="resetGame()">Reset Game</button>
+  <button onclick="resetGame()">Reset</button>
 </div>
 
 <script>
-/* ---------- BOARD ---------- */
-const board = document.getElementById("board");
-const pathLength = 36;
+/* BOARD BUILD */
+const board=document.getElementById("board");
 
-for(let i=0;i<pathLength;i++){
+for(let i=0;i<225;i++){
   const c=document.createElement("div");
   c.className="cell";
-  c.id="cell"+i;
+  c.id="c"+i;
   board.appendChild(c);
 }
 
-/* ---------- GAME STATE ---------- */
-let state = JSON.parse(localStorage.getItem("ludoState")) || {
-  currentPlayer:0,
+/* CENTER */
+const center=document.createElement("div");
+center.className="center";
+center.innerText="YALLA";
+board.appendChild(center);
+
+/* GAME DATA */
+let game = JSON.parse(localStorage.getItem("yallaLudo")) || {
+  turn:0,
   dice:0,
   players:[
     {color:"red",pos:0},
@@ -95,61 +141,70 @@ let state = JSON.parse(localStorage.getItem("ludoState")) || {
   ]
 };
 
-const colors=["Red","Green","Yellow","Blue"];
+const names=["Red","Green","Yellow","Blue"];
 
-/* ---------- RENDER ---------- */
+/* PATH (simplified professional loop) */
+const path=[
+  7,22,37,52,67,82,97,112,127,
+  128,129,130,131,132,
+  147,162,177,192,207,208,
+  193,178,163,148,133,
+  118,103,88,73,58,
+  57,56,55,54,53,
+  38,23,8
+];
+
+/* RENDER */
 function render(){
   document.querySelectorAll(".token").forEach(t=>t.remove());
 
-  state.players.forEach((p,i)=>{
-    if(p.pos < pathLength){
+  game.players.forEach(p=>{
+    if(p.pos < path.length){
       const token=document.createElement("div");
       token.className="token "+p.color;
-      document.getElementById("cell"+p.pos).appendChild(token);
+      document.getElementById("c"+path[p.pos]).appendChild(token);
     }
   });
 
-  document.getElementById("turnInfo").innerText=
-    "Turn: "+colors[state.currentPlayer];
-  document.getElementById("dice").innerText="🎲 "+state.dice;
+  document.getElementById("turn").innerText="Turn: "+names[game.turn];
+  document.getElementById("dice").innerText="🎲 "+game.dice;
 
-  localStorage.setItem("ludoState",JSON.stringify(state));
+  localStorage.setItem("yallaLudo",JSON.stringify(game));
 }
 
-/* ---------- DICE ---------- */
+/* DICE */
 function rollDice(){
-  state.dice = Math.floor(Math.random()*6)+1;
-  moveToken();
+  game.dice=Math.floor(Math.random()*6)+1;
+  move();
 }
 
-/* ---------- MOVE ---------- */
-function moveToken(){
-  let p = state.players[state.currentPlayer];
-  p.pos += state.dice;
+/* MOVE */
+function move(){
+  let p=game.players[game.turn];
+  p.pos+=game.dice;
 
-  if(p.pos >= pathLength){
-    alert(colors[state.currentPlayer]+" Wins!");
+  if(p.pos>=path.length){
+    alert(names[game.turn]+" Wins!");
     resetGame();
     return;
   }
 
-  // CUT LOGIC
-  state.players.forEach((op,i)=>{
-    if(i!==state.currentPlayer && op.pos===p.pos){
-      op.pos=0;
+  // CUT
+  game.players.forEach((o,i)=>{
+    if(i!==game.turn && o.pos===p.pos){
+      o.pos=0;
     }
   });
 
-  // NEXT TURN
-  state.currentPlayer = (state.currentPlayer+1)%4;
+  game.turn=(game.turn+1)%4;
   render();
 }
 
-/* ---------- RESET ---------- */
+/* RESET */
 function resetGame(){
-  localStorage.removeItem("ludoState");
-  state={
-    currentPlayer:0,
+  localStorage.removeItem("yallaLudo");
+  game={
+    turn:0,
     dice:0,
     players:[
       {color:"red",pos:0},
@@ -161,7 +216,6 @@ function resetGame(){
   render();
 }
 
-/* ---------- START ---------- */
 render();
 </script>
 
