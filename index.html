@@ -1,13 +1,14 @@
-async function getAIResponse(question) {
-    try {
-        const response = await fetch('http://localhost:3000/chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: question })
-        });
-        const data = await response.json();
-        return data.answer;
-    } catch (err) {
-        return "Sorry, I cannot answer right now.";
-    }
-}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AI Voice Assistant</title>
+</head>
+<body>
+<h1>🤖 AI Voice Assistant</h1>
+<button id="startBtn">🎤 Start Listening</button>
+<p id="output">Your command will appear here...</p>
+
+<script src="voice-assistant.js"></script>
+</body>
+</html>
