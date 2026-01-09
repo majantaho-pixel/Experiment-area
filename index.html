@@ -2,34 +2,34 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Premium Ludo</title>
+<title>Screenshot-Style Ludo</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 body{
   margin:0;
-  font-family:Arial, sans-serif;
-  background:radial-gradient(circle at top,#1e3a8a,#020617);
+  font-family:Arial,sans-serif;
+  background:#0b1220;
   color:#fff;
   text-align:center;
 }
 header{
   padding:10px;
-  background:rgba(0,0,0,.5);
   font-size:20px;
   font-weight:bold;
+  background:rgba(0,0,0,0.5);
 }
 
 /* BOARD */
 #board{
-  width:360px;
-  height:360px;
+  width:450px;
+  height:450px;
   margin:10px auto;
   display:grid;
   grid-template-columns:repeat(15,1fr);
   grid-template-rows:repeat(15,1fr);
   border:4px solid gold;
-  background:#0b1220;
+  background:#111827;
   box-shadow:0 0 20px gold;
 }
 .cell{
@@ -52,18 +52,18 @@ header{
   border-radius:10px;
 }
 
-/* TOKENS */
+/* TOKEN */
 .token{
   width:16px;
   height:16px;
   border-radius:50%;
   position:absolute;
   cursor:pointer;
-  transition:.2s;
+  margin:2px;
   box-shadow:0 0 8px #000;
+  transition:.2s;
 }
 .token:hover{transform:scale(1.2)}
-
 .red{background:#dc2626}
 .green{background:#16a34a}
 .yellow{background:#facc15}
@@ -84,7 +84,6 @@ button{
   cursor:pointer;
 }
 button:active{transform:scale(.95)}
-
 #dice{
   font-size:32px;
   margin:5px;
@@ -105,15 +104,25 @@ button:active{transform:scale(.95)}
 
 <body>
 
-<header>🎲 Premium Ludo</header>
+<header>🎲 Screenshot-Style Ludo</header>
+
+<div>
+Players:
+<select id="playerCount">
+<option value="2">2 Players</option>
+<option value="3">3 Players</option>
+<option value="4" selected>4 Players</option>
+</select>
+<button onclick="startGame()">Start</button>
+</div>
 
 <div id="board"></div>
 
 <div id="panel">
-  <h3 id="turnInfo"></h3>
-  <div id="dice">🎲</div>
-  <button onclick="rollDice()">Roll Dice</button>
-  <button onclick="resetGame()">Reset</button>
+<h3 id="turnInfo"></h3>
+<div id="dice">🎲</div>
+<button onclick="rollDice()">Roll Dice</button>
+<button onclick="resetGame()">Reset</button>
 </div>
 
 <audio id="diceSound">
@@ -121,8 +130,9 @@ button:active{transform:scale(.95)}
 </audio>
 
 <script>
-/* BOARD BUILD */
 const board=document.getElementById("board");
+
+/* BUILD BOARD */
 for(let i=0;i<225;i++){
   const c=document.createElement("div");
   c.className="cell";
@@ -141,8 +151,7 @@ const safe=[7,37,67,97,127,147,177,207];
 safe.forEach(i=>document.getElementById("c"+i).classList.add("safe"));
 
 /* PATH */
-const path=[
-7,22,37,52,67,82,97,112,127,
+const path=[7,22,37,52,67,82,97,112,127,
 128,129,130,131,132,
 147,162,177,192,207,
 208,193,178,163,148,133,
@@ -154,21 +163,32 @@ const path=[
 const colors=["red","green","yellow","blue"];
 const names=["Red","Green","Yellow","Blue"];
 
-let game = JSON.parse(localStorage.getItem("ludoPro")) || {
-  turn:0,
-  dice:0,
-  players:colors.map(c=>({
-    color:c,
-    tokens:[-1,-1,-1,-1] // -1 = home
-  }))
-};
+let game;
 
-function save(){localStorage.setItem("ludoPro",JSON.stringify(game));}
+/* START */
+function startGame(){
+  const count=parseInt(document.getElementById("playerCount").value);
+  game={
+    players:[],
+    turn:0,
+    dice:0,
+    count:count
+  };
+  for(let i=0;i<count;i++){
+    game.players.push({color:colors[i],tokens:[-1,-1,-1,-1]});
+  }
+  save();
+  render();
+}
+
+/* SAVE & LOAD */
+function save(){localStorage.setItem("screenshotLudo",JSON.stringify(game));}
+game=JSON.parse(localStorage.getItem("screenshotLudo"));
+if(game) render();
 
 /* RENDER */
 function render(){
   document.querySelectorAll(".token").forEach(t=>t.remove());
-
   game.players.forEach((p,pi)=>{
     p.tokens.forEach((pos,ti)=>{
       if(pos>=0){
@@ -179,10 +199,7 @@ function render(){
       }
     });
   });
-
-  document.getElementById("turnInfo").innerText=
-    "Turn: "+names[game.turn];
-  save();
+  document.getElementById("turnInfo").innerText="Turn: "+names[game.turn];
 }
 
 /* DICE */
@@ -204,7 +221,7 @@ function selectToken(playerIndex,tokenIndex){
   let p=game.players[playerIndex];
   let pos=p.tokens[tokenIndex];
 
-  // bring out only on 6
+  // bring out on 6
   if(pos===-1){
     if(game.dice===6) p.tokens[tokenIndex]=0;
     else return;
@@ -225,18 +242,18 @@ function selectToken(playerIndex,tokenIndex){
 
   // NEXT TURN
   if(game.dice!==6)
-    game.turn=(game.turn+1)%4;
+    game.turn=(game.turn+1)%game.count;
 
+  save();
   render();
 }
 
 /* RESET */
 function resetGame(){
-  localStorage.removeItem("ludoPro");
+  localStorage.removeItem("screenshotLudo");
   location.reload();
 }
 
-render();
 </script>
 
 </body>
