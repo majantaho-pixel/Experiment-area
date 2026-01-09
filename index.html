@@ -23,21 +23,24 @@ function speak(text) {
 }
 
 async function getAIResponse(question) {
-    // OpenAI API call
-    const apiKey = 'YOUR_OPENAI_API_KEY'; // <-- یہاں اپنی API key ڈالیں
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify({
-            model: "gpt-3.5-turbo",
-            messages: [{role: "user", content: question}]
-        })
-    });
-    const data = await response.json();
-    return data.choices[0].message.content;
+    const apiKey = 'YOUR_OPENAI_API_KEY'; // <-- اپنی API key یہاں ڈالیں
+    try {
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`
+            },
+            body: JSON.stringify({
+                model: "gpt-3.5-turbo",
+                messages: [{role: "user", content: question}]
+            })
+        });
+        const data = await response.json();
+        return data.choices[0].message.content;
+    } catch (err) {
+        return "Sorry, I cannot answer right now.";
+    }
 }
 
 startBtn.addEventListener('click', () => {
@@ -49,9 +52,11 @@ recognition.onresult = async (event) => {
     const command = event.results[0][0].transcript;
     output.textContent = `You said: ${command}`;
 
-    // Get AI response
+    // Get smart AI response
     const answer = await getAIResponse(command);
     output.textContent += `\nAI: ${answer}`;
+
+    // Speak the answer
     speak(answer);
 };
 
